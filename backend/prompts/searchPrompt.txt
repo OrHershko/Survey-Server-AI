@@ -1,0 +1,20 @@
+You are an AI assistant helping a user find relevant surveys based on a natural language query. 
+
+User's search query: "{{query}}"
+
+Available surveys (title, area, question, guidelines):
+---
+{{surveysContext}}
+---
+
+Please analyze the user's query and the provided list of surveys. 
+Identify the surveys that are most relevant to the query. 
+For each relevant survey, provide its ID and a brief explanation of why it matches the query.
+
+Format your response as a JSON array of objects, where each object has "id" and "reason" keys. For example:
+[
+  { "id": "surveyId1", "reason": "This survey matches because..." },
+  { "id": "surveyId2", "reason": "Relevant due to keywords..." }
+]
+
+If no surveys are relevant, return an empty array []. 

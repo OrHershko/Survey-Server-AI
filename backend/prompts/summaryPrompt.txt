@@ -1,0 +1,14 @@
+You are an AI assistant tasked with summarizing survey responses. 
+
+Survey Question: {{surveyQuestion}}
+Survey Area: {{surveyArea}}
+
+Guidelines for summary: 
+{{guidelines}}
+
+Provided responses:
+---
+{{responsesText}}
+---
+
+Please generate a concise and objective summary based on the provided responses and guidelines. The summary should reflect the main themes and sentiments expressed. Do not add any opinions or information not present in the responses. 

@@ -6,49 +6,49 @@ Build a Survey Server that allows users to share opinions in free text, analyzed
 ## 1. Project Setup
 
 ### Repository and Environment Setup
-- [ ] Initialize Git repository with proper .gitignore
+- [x] Initialize Git repository with proper .gitignore
   - Exclude node_modules, .env files, coverage reports, build artifacts
-- [ ] Create project structure with separate backend and frontend directories
+- [x] Create project structure with separate backend and frontend directories
   - `/backend` - Express API server
   - `/frontend` - React application
   - `/docs` - Documentation and specifications
   - `/prompts` - LLM prompt templates
-- [ ] Set up package.json for both backend and frontend
+- [x] Set up package.json for both backend and frontend
   - Backend: Express, MongoDB, JWT, Winston, Jest dependencies
   - Frontend: React, Axios, React Router dependencies
-- [ ] Configure environment variables structure
+- [x] Configure environment variables structure
   - `.env.example` files for both backend and frontend
   - `.env.development`, `.env.test` configurations
-- [ ] Set up ESLint and Prettier configurations
+- [x] Set up ESLint and Prettier configurations
   - Consistent code formatting across project
   - React and Node.js specific rules
 
 ### Database Setup
-- [ ] Create MongoDB Atlas cluster and database
+- [x] Create MongoDB Atlas cluster and database
   - Configure network access and security settings
   - Set up database user with appropriate permissions
-- [ ] Design database schema and collections
+- [x] Design database schema and collections
   - Users collection (username, email, passwordHash)
   - Surveys collection (creator, guidelines, responses, summary, etc.)
   - Indexes for performance optimization
-- [ ] Set up MongoDB connection string in environment variables
-- [ ] Configure mongoose ODM with connection pooling and error handling
+- [x] Set up MongoDB connection string in environment variables
+- [x] Configure mongoose ODM with connection pooling and error handling
 
 ### Development Tools Setup
-- [ ] Install and configure development dependencies
+- [x] Install and configure development dependencies
   - nodemon for backend development
   - concurrently to run backend and frontend simultaneously
-- [ ] Set up testing framework with mongodb-memory-server
+- [x] Set up testing framework with mongodb-memory-server
   - Jest configuration for backend testing
   - React Testing Library for frontend testing
-- [ ] Configure code coverage reporting with Jest
+- [x] Configure code coverage reporting with Jest
   - Aim for 70% coverage target
-- [ ] Set up pre-commit hooks with husky (optional but recommended)
+- [x] Set up pre-commit hooks with husky (optional but recommended)
 
 ## 2. Backend Foundation
 
 ### Project Structure and Core Setup
-- [ ] Create modular backend architecture
+- [x] Create modular backend architecture
   - `/controllers` - Request handling logic
   - `/services` - Business logic layer
   - `/models` - Mongoose schemas and models
@@ -56,148 +56,144 @@ Build a Survey Server that allows users to share opinions in free text, analyzed
   - `/routes` - API endpoint definitions
   - `/utils` - Helper functions and utilities
   - `/config` - Database and application configuration
-- [ ] Set up Express server with essential middleware
+- [x] Set up Express server with essential middleware
   - CORS configuration for frontend communication
   - Body parsing for JSON requests
   - Morgan for HTTP request logging
   - Error handling middleware
-- [ ] Configure Winston logger with structured logging
+- [x] Configure Winston logger with structured logging
   - Different log levels for development and production
   - File and console transports
   - Request correlation IDs
 
 ### Database Models and Schemas
-- [ ] Create User model with Mongoose
+- [x] Create User model with Mongoose
   - Schema: username, email, passwordHash, createdAt
   - Unique constraints and validation rules
   - Password hashing methods
-- [ ] Create Survey model with comprehensive schema
+- [x] Create Survey model with comprehensive schema
   - Fields: title, area, question, guidelines, permittedDomains, permittedResponses, summaryInstructions
   - creator (User reference), expiryDate, closed status
   - responses array with nested schema
   - summary field with visibility controls
   - timestamps and indexes
-- [ ] Set up database connection and error handling
+- [x] Set up database connection and error handling
   - Connection pooling configuration
   - Reconnection logic for production stability
   - Database health check endpoint
 
 ### Authentication System Foundation
-- [ ] Implement JWT token generation and validation
+- [x] Implement JWT token generation and validation
   - Token signing with secret key
-  - Token expiration and refresh logic
+  - Token expiration and refresh logic (basic generation and verification in place, full refresh flow TBD)
   - Middleware for protecting routes
-- [ ] Create authentication middleware
+- [x] Create authentication middleware
   - Bearer token extraction and validation
   - User context injection into requests
   - Error handling for invalid/expired tokens
-- [ ] Set up Joi validation schemas
+- [x] Set up Joi validation schemas
   - User registration and login validation
   - Survey creation and response validation
   - Centralized schema definitions for reusability
 
 ### Core Services and Utilities
-- [ ] Create LLM service for OpenRouter integration
+- [x] Create LLM service for OpenRouter integration
   - DeepSeek API configuration and connection
   - Error handling and retry logic
   - Mock service for testing environment
-- [ ] Implement base service classes
+- [x] Implement base service classes
   - Database operation patterns
   - Error handling standardization
   - Logging integration
-- [ ] Set up utility functions
+- [x] Set up utility functions
   - Date/time helpers for survey expiry
-  - Validation helpers
-  - Response formatting utilities
+  - Validation helpers (basic structure, Joi handles most)
+  - Response formatting utilities (basic structure, can be expanded)
 
 ## 3. Feature-specific Backend
 
 ### Authentication Endpoints
-- [ ] Implement POST /auth/register endpoint
+- [x] Implement POST /auth/register endpoint
   - Validate registration code against environment secret
   - Hash password with bcrypt
   - Create user record in database
   - Return success message (no JWT on registration)
-- [ ] Implement POST /auth/login endpoint
+- [x] Implement POST /auth/login endpoint
   - Validate email and password
   - Compare hashed passwords
   - Generate and return JWT token
   - Handle authentication errors
 
 ### Survey Management API
-- [ ] Implement POST /surveys endpoint (Create Survey)
+- [x] Implement POST /surveys endpoint (Create Survey)
   - Authentication required
   - Validate survey data with Joi schemas
   - Set creator from authenticated user
   - Store survey with all guideline fields
-- [ ] Implement GET /surveys endpoint (List Surveys)
+- [x] Implement GET /surveys endpoint (List Surveys)
   - Return all active surveys with basic information
   - Pagination support for large datasets
   - Filter options for survey status
-- [ ] Implement GET /surveys/:id endpoint (Get Survey Details)
+- [x] Implement GET /surveys/:id endpoint (Get Survey Details)
   - Return complete survey information
   - Include responses if user is creator or contributor
   - Respect summary visibility settings
-- [ ] Implement PATCH /surveys/:id/close endpoint (Close Survey)
-  - Creator-only authorization
-  - Prevent new responses after closing
-  - Update survey status in database
-- [ ] Implement PATCH /surveys/:id/expiry endpoint (Update Expiry)
-  - Creator-only authorization
-  - Validate new expiry date
-  - Update survey expiry time
 
 ### Response Management API
-- [ ] Implement POST /surveys/:id/responses endpoint (Submit Response)
+- [x] Implement POST /surveys/:id/responses endpoint (Submit Response)
   - Authentication required
   - Validate survey is open and not expired
   - Store response with user reference
   - Handle duplicate responses (update existing)
-- [ ] Implement PUT /surveys/:id/responses/:responseId endpoint (Update Response)
+- [x] Implement PUT /surveys/:id/responses/:responseId endpoint (Update Response)
   - User can only update their own responses
   - Validate survey is still open
   - Update response content
-- [ ] Implement DELETE /surveys/:id/responses/:responseId endpoint (Delete Response)
+- [x] Implement DELETE /surveys/:id/responses/:responseId endpoint (Delete Response)
   - User can delete own responses, creator can delete any
   - Validate survey status
   - Remove response from database
+- [x] Implement PATCH /surveys/:id/expiry endpoint (Update Expiry)
+  - Creator-only authorization
+  - Validate new expiry date
+  - Update survey expiry time
 
 ### AI-Powered Features API
-- [ ] Implement POST /surveys/:id/summarize endpoint (Generate Summary)
+- [x] Implement POST /surveys/:id/summarize endpoint (Generate Summary)
   - Creator-only authorization
   - Compile all responses for LLM processing
   - Use survey guidelines for summary instructions
   - Store generated summary with survey
   - Handle LLM service errors gracefully
-- [ ] Implement PATCH /surveys/:id/summary/visibility endpoint (Toggle Summary Visibility)
+- [x] Implement PATCH /surveys/:id/summary/visibility endpoint (Toggle Summary Visibility)
   - Creator-only authorization
   - Show/hide summary for public viewing
   - Update visibility flag in database
-- [ ] Implement POST /surveys/search endpoint (Natural Language Search)
+- [x] Implement POST /surveys/search endpoint (Natural Language Search)
   - Accept natural language query
   - Prepare context with all surveys for LLM
   - Process LLM response for survey IDs and reasons
   - Return matched surveys with explanations
-- [ ] Implement POST /surveys/:id/validate-responses endpoint (Validate Responses)
+- [x] Implement POST /surveys/:id/validate-responses endpoint (Validate Responses)
   - Creator-only authorization
   - Send responses to LLM for guideline compliance check
   - Return list of problematic responses with reasons
   - Support bulk validation of all responses
 
 ### LLM Integration Services
-- [ ] Create prompt management system
+- [x] Create prompt management system
   - Load prompts from `/prompts` directory on server start
   - Validate prompt file existence
   - Support dynamic prompt template variables
-- [ ] Implement search prompt service
+- [x] Implement search prompt service
   - Format surveys and query for LLM processing
   - Parse LLM response for survey matches
   - Handle malformed LLM responses
-- [ ] Implement summary prompt service
+- [x] Implement summary prompt service
   - Compile responses according to survey guidelines
   - Format summary request with instructions
   - Process and clean LLM summary response
-- [ ] Implement validation prompt service
+- [x] Implement validation prompt service
   - Format responses with survey guidelines
   - Parse LLM validation results
   - Return structured violation reports

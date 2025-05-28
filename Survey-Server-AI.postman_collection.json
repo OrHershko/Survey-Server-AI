@@ -1,0 +1,512 @@
+{
+	"info": {
+		"_postman_id": "YOUR_COLLECTION_ID",
+		"name": "Survey Server AI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "AI Endpoints",
+			"item": [
+				{
+					"name": "Generate Survey Summary",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/surveys/:id/summarize",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"surveys",
+								":id",
+								"summarize"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Summary Visibility",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"isVisible\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/surveys/:id/summary/visibility",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"surveys",
+								":id",
+								"summary",
+								"visibility"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Surveys NLP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"surveys about technology\"\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/surveys/search",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"surveys",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Survey Responses",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/surveys/:id/validate-responses",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"surveys",
+								":id",
+								"validate-responses"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Survey Endpoints",
+			"item": [
+				{
+					"name": "Create Survey",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"New Survey Title\",\n    \"area\": \"Technology\",\n    \"question\": \"What is your favorite programming language?\",\n    \"guidelines\": \"Please be respectful.\",\n    \"expiryDate\": \"2024-12-31T23:59:59Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/surveys",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"surveys"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Surveys",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseURL}}/surveys?page=1&limit=10&status=active",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"surveys"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "active"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Survey By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/surveys/:id",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"surveys",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Close Survey",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/surveys/:id/close",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"surveys",
+								":id",
+								"close"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Survey Expiry",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"expiryDate\": \"2025-01-15T23:59:59Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/surveys/:id/expiry",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"surveys",
+								":id",
+								"expiry"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"responseText\": \"This is my answer to the survey.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/surveys/:id/responses",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"surveys",
+								":id",
+								"responses"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Response",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"responseText\": \"This is my updated answer.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/surveys/:id/responses/:responseId",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"surveys",
+								":id",
+								"responses",
+								":responseId"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								},
+								{
+									"key": "responseId",
+									"value": "your_response_id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Response",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/surveys/:id/responses/:responseId",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"surveys",
+								":id",
+								"responses",
+								":responseId"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "your_survey_id"
+								},
+								{
+									"key": "responseId",
+									"value": "your_response_id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth Endpoints",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"registrationCode\": \"YOUR_REGISTRATION_SECRET\"\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/register",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "http://localhost:5000" 
+		},
+		{
+			"key": "authToken",
+			"value": ""
+		}
+	]
+} 

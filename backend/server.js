@@ -6,7 +6,6 @@ const connectDB = require('./config/database');
 const logger = require('./config/logger'); // Import Winston logger
 const mongoose = require('mongoose');
 const { loadPrompts } = require('./services/llmService'); // Import loadPrompts
-const errorHandler = require('./middleware/errorHandler');
 
 // Initialize Express app
 const app = express();
@@ -50,10 +49,8 @@ const surveyRoutes = require('./routes/surveyRoutes');
 const aiRoutes = require('./routes/aiRoutes'); // Import AI routes
 app.use('/auth', authRoutes);
 app.use('/surveys', surveyRoutes);
-app.use('/api/ai', aiRoutes); // Use AI routes
+app.use('/ai', aiRoutes); // Use AI routes
 
-// Global error handler
-app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

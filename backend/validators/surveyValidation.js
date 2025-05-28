@@ -47,7 +47,7 @@ const surveyResponseSchema = Joi.object({
       'string.empty': 'Response text cannot be an empty field',
       'string.min': 'Response text should have a minimum length of {#limit}',
       'string.max': 'Response text should have a maximum length of {#limit}',
-      'any.required': 'Response text is a required field'
+      'any.required': '"text" is a required field'
     })
 });
 

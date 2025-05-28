@@ -6,10 +6,7 @@ let mongoServer;
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  await mongoose.connect(mongoUri);
 });
 
 afterAll(async () => {
@@ -17,7 +14,7 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
-// Optional: Clear all data in the mock database before each test
+// Optional: Clear all data before each test
 beforeEach(async () => {
   const collections = mongoose.connection.collections;
   for (const key in collections) {

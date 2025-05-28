@@ -1,8 +1,7 @@
 const asyncHandler = require('express-async-handler');
-const Survey = require('../models/Survey');
+const Survey = require('../models/SurveyModel');
 const llmService = require('../services/llmService');
-const AppError = require('../utils/AppError');
-const logger = require('../utils/logger'); // Or your configured logger path
+const logger = require('../config/logger'); // Or your configured logger path
 
 // @desc    Generate a summary for a survey
 // @route   POST /api/surveys/:id/summarize
@@ -14,18 +13,21 @@ const generateSurveySummary = asyncHandler(async (req, res, next) => {
     const survey = await Survey.findById(surveyId);
 
     if (!survey) {
-        return next(new AppError('Survey not found', 404));
+        //return next(new AppError('Survey not found', 404));
+        return res.status(404).json({ message: 'Survey not found' });
     }
 
     // Authorization: Only creator can summarize
     if (survey.creator.toString() !== userId) {
-        return next(new AppError('User not authorized to summarize this survey', 403));
+        //return next(new AppError('User not authorized to summarize this survey', 403));
+        return res.status(403).json({ message: 'User not authorized to summarize this survey' });
     }
 
     // Compile responses - this might need more specific logic based on your Survey model
     const responsesText = survey.responses.map(r => r.responseText).join('\n---\n'); // Example
     if (!responsesText || responsesText.trim() === '') {
-        return next(new AppError('No responses available to summarize', 400));
+        //return next(new AppError('No responses available to summarize', 400));
+        return res.status(400).json({ message: 'No responses available to summarize' });
     }
 
     try {
@@ -45,7 +47,8 @@ const generateSurveySummary = asyncHandler(async (req, res, next) => {
         });
     } catch (error) {
         logger.error(`Error generating summary for survey ${surveyId}:`, error);
-        return next(new AppError('Failed to generate summary due to an internal error', 500));
+        //return next(new AppError('Failed to generate summary due to an internal error', 500));
+        return res.status(500).json({ message: 'Failed to generate summary due to an internal error' });
     }
 });
 
@@ -58,21 +61,25 @@ const toggleSummaryVisibility = asyncHandler(async (req, res, next) => {
     const { isVisible } = req.body; // Expecting { isVisible: true/false }
 
     if (typeof isVisible !== 'boolean') {
-        return next(new AppError('Invalid visibility value. Must be true or false.', 400));
+        //return next(new AppError('Invalid visibility value. Must be true or false.', 400));
+        return res.status(400).json({ message: 'Invalid visibility value. Must be true or false.' });
     }
 
     const survey = await Survey.findById(surveyId);
 
     if (!survey) {
-        return next(new AppError('Survey not found', 404));
+        //return next(new AppError('Survey not found', 404));
+        return res.status(404).json({ message: 'Survey not found' });
     }
 
     if (survey.creator.toString() !== userId) {
-        return next(new AppError('User not authorized to change summary visibility for this survey', 403));
+        //return next(new AppError('User not authorized to change summary visibility for this survey', 403));
+        return res.status(403).json({ message: 'User not authorized to change summary visibility for this survey' });
     }
 
     if (!survey.summary) {
-        return next(new AppError('No summary available to toggle visibility. Generate a summary first.', 400));
+        //return next(new AppError('No summary available to toggle visibility. Generate a summary first.', 400));
+        return res.status(400).json({ message: 'No summary available to toggle visibility. Generate a summary first.' });
     }
 
     survey.summaryVisibleToRespondents = isVisible;
@@ -92,7 +99,8 @@ const searchSurveysNLP = asyncHandler(async (req, res, next) => {
     const { query } = req.body;
 
     if (!query || typeof query !== 'string' || query.trim() === '') {
-        return next(new AppError('Search query is required and must be a non-empty string.', 400));
+        //return next(new AppError('Search query is required and must be a non-empty string.', 400));
+        return res.status(400).json({ message: 'Search query is required and must be a non-empty string.' });
     }
 
     // Fetch surveys to provide context. This might need to be optimized for many surveys.
@@ -105,7 +113,8 @@ const searchSurveysNLP = asyncHandler(async (req, res, next) => {
         res.status(200).json({ success: true, results: matchedSurveys });
     } catch (error) {
         logger.error(`Error during natural language search for surveys with query "${query}":`, error);
-        return next(new AppError('Failed to perform search due to an internal error', 500));
+        //return next(new AppError('Failed to perform search due to an internal error', 500));
+        return res.status(500).json({ message: 'Failed to perform search due to an internal error' });
     }
 });
 
@@ -119,15 +128,18 @@ const validateSurveyResponses = asyncHandler(async (req, res, next) => {
     const survey = await Survey.findById(surveyId).populate('responses.user', 'username email');
 
     if (!survey) {
-        return next(new AppError('Survey not found', 404));
+        //return next(new AppError('Survey not found', 404));
+        return res.status(404).json({ message: 'Survey not found' });
     }
 
     if (survey.creator.toString() !== userId) {
-        return next(new AppError('User not authorized to validate responses for this survey', 403));
+        //return next(new AppError('User not authorized to validate responses for this survey', 403));
+        return res.status(403).json({ message: 'User not authorized to validate responses for this survey' });
     }
 
     if (!survey.responses || survey.responses.length === 0) {
-        return next(new AppError('No responses available to validate', 400));
+        //return next(new AppError('No responses available to validate', 400));
+        return res.status(400).json({ message: 'No responses available to validate' });
     }
 
     // Extract response texts for validation
@@ -140,7 +152,8 @@ const validateSurveyResponses = asyncHandler(async (req, res, next) => {
         res.status(200).json({ success: true, validationResults });
     } catch (error) {
         logger.error(`Error validating responses for survey ${surveyId}:`, error);
-        return next(new AppError('Failed to validate responses due to an internal error', 500));
+        //return next(new AppError('Failed to validate responses due to an internal error', 500));
+        return res.status(500).json({ message: 'Failed to validate responses due to an internal error' });
     }
 });
 

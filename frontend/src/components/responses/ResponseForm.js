@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Box, TextField, Alert, Typography } from '@mui/material';
+import { surveyService } from '../../services';
 import LoadingButton from '../form/LoadingButton';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -16,10 +16,10 @@ const ResponseForm = ({ surveyId, onResponseSubmit }) => {
     setError(null);
 
     try {
-      const response = await axios.post(`/api/surveys/${surveyId}/responses`, {
-        text: responseText,
+      const response = await surveyService.submitResponse(surveyId, {
+        content: responseText,
       });
-      onResponseSubmit(response.data);
+      onResponseSubmit(response);
       setResponseText('');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit response.');

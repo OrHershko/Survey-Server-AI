@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Container, Typography, Box, Paper } from '@mui/material';
+import { surveyService } from '../services';
 import ValidatedTextField from '../components/form/ValidatedTextField';
 import LoadingButton from '../components/form/LoadingButton';
 import DateTimePicker from '../components/form/DateTimePicker';
@@ -33,8 +33,8 @@ const CreateSurvey = () => {
 
     try {
       const surveyData = { ...formData, expiryDate: expiryDate.toISOString() };
-      const response = await axios.post('/api/surveys', surveyData);
-      navigate(`/surveys/${response.data._id}`);
+      const response = await surveyService.createSurvey(surveyData);
+      navigate(`/surveys/${response._id}`);
     } catch (err) {
       setError('Failed to create survey. Please check your input and try again.');
       console.error(err);

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import {
   Box,
   Typography,
@@ -9,6 +8,7 @@ import {
   ListItemText,
   Alert,
 } from '@mui/material';
+import { aiService } from '../../services';
 import LoadingButton from '../form/LoadingButton';
 import ToastNotification from '../common/ToastNotification';
 
@@ -22,8 +22,8 @@ const ResponseValidation = ({ surveyId }) => {
     setError(null);
     setValidationResults(null);
     try {
-      const response = await axios.post(`/api/surveys/${surveyId}/validate-responses`);
-      setValidationResults(response.data);
+      const response = await aiService.validateSurveyResponses(surveyId);
+      setValidationResults(response);
     } catch (err) {
       setError('Failed to validate responses.');
       console.error(err);

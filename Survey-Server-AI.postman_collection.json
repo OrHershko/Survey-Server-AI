@@ -20,7 +20,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/api/surveys/:id/summarize",
+							"raw": "{{baseURL}}/surveys/:id/summarize",
 							"host": [
 								"{{baseURL}}"
 							],
@@ -61,7 +61,7 @@
 							"raw": "{\n    \"isVisible\": true\n}"
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/surveys/:id/summary/visibility",
+							"raw": "{{baseURL}}/surveys/:id/summary/visibility",
 							"host": [
 								"{{baseURL}}"
 							],
@@ -98,7 +98,7 @@
 							"raw": "{\n    \"query\": \"surveys about technology\"\n}"
 						},
 						"url": {
-							"raw": "{{baseURL}}/api/surveys/search",
+							"raw": "{{baseURL}}/surveys/search",
 							"host": [
 								"{{baseURL}}"
 							],
@@ -123,7 +123,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseURL}}/api/surveys/:id/validate-responses",
+							"raw": "{{baseURL}}/surveys/:id/validate-responses",
 							"host": [
 								"{{baseURL}}"
 							],

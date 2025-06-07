@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import {
   Box,
   TextField,
@@ -10,6 +9,7 @@ import {
   Paper,
   Divider,
 } from '@mui/material';
+import { aiService } from '../../services';
 import LoadingButton from '../form/LoadingButton';
 import ToastNotification from '../common/ToastNotification';
 import { Link as RouterLink } from 'react-router-dom';
@@ -29,8 +29,8 @@ const SearchSurveys = () => {
     setSearched(true);
 
     try {
-      const response = await axios.post('/api/surveys/search', { query });
-      setResults(response.data);
+      const response = await aiService.searchSurveysNLP({ query });
+      setResults(response);
     } catch (err) {
       setError('Failed to perform search. Please try again.');
       console.error(err);

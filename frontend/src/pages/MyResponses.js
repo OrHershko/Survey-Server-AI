@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Container,
   Typography,
@@ -10,6 +9,7 @@ import {
   Paper,
   Divider,
 } from '@mui/material';
+import api from '../services/api';
 import { Link as RouterLink } from 'react-router-dom';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToastNotification from '../components/common/ToastNotification';
@@ -25,8 +25,8 @@ const MyResponses = () => {
     const fetchMyResponses = async () => {
       if (!user) return;
       try {
-        // Assuming an endpoint to get all responses by a user
-        const response = await axios.get(`/api/responses/user/${user._id}`);
+        // Using the configured API service to get all responses by a user
+        const response = await api.get(`/api/responses/user/${user._id}`);
         setResponses(response.data);
       } catch (err) {
         setError('Failed to fetch your responses.');

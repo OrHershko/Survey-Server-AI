@@ -4,7 +4,7 @@ const llmService = require('../services/llmService');
 const logger = require('../config/logger'); // Or your configured logger path
 
 // @desc    Generate a summary for a survey
-// @route   POST /api/surveys/:id/summarize
+// @route   POST /surveys/:id/summarize
 // @access  Private (Creator only)
 const generateSurveySummary = asyncHandler(async (req, res, next) => {
     const surveyId = req.params.id;
@@ -53,7 +53,7 @@ const generateSurveySummary = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Toggle visibility of a survey's summary
-// @route   PATCH /api/surveys/:id/summary/visibility
+// @route   PATCH /surveys/:id/summary/visibility
 // @access  Private (Creator only)
 const toggleSummaryVisibility = asyncHandler(async (req, res, next) => {
     const surveyId = req.params.id;
@@ -93,7 +93,7 @@ const toggleSummaryVisibility = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Natural language search for surveys
-// @route   POST /api/surveys/search
+// @route   POST /surveys/search
 // @access  Public (or Private, depending on requirements)
 const searchSurveysNLP = asyncHandler(async (req, res, next) => {
     const { query } = req.body;
@@ -119,7 +119,7 @@ const searchSurveysNLP = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Validate responses for a survey against guidelines
-// @route   POST /api/surveys/:id/validate-responses
+// @route   POST /surveys/:id/validate-responses
 // @access  Private (Creator only)
 const validateSurveyResponses = asyncHandler(async (req, res, next) => {
     const surveyId = req.params.id;

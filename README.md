@@ -217,12 +217,12 @@ By default, the system uses mock AI responses for development and testing. To en
    - Example: "Find surveys about programming languages"
    - Returns matched surveys with explanations
 
-2. **Survey Summarization** (`POST /api/surveys/:id/summarize`)
+2. **Survey Summarization** (`POST /surveys/:id/summarize`)
    - Generate AI summaries of survey responses
    - Only available to survey creators
    - Uses survey guidelines for context
 
-3. **Response Validation** (`POST /api/surveys/:id/validate-responses`)
+3. **Response Validation** (`POST /surveys/:id/validate-responses`)
    - Validate responses against survey guidelines
    - Identifies problematic responses
    - Returns detailed violation reasons

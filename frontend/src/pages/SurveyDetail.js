@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
 import { Container, Typography, Box, Paper, Divider } from '@mui/material';
+import { surveyService } from '../services';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToastNotification from '../components/common/ToastNotification';
 import ResponseForm from '../components/responses/ResponseForm';
@@ -31,7 +31,7 @@ const SurveyDetail = () => {
 
   const handleDeleteResponse = async (responseId) => {
     try {
-      await axios.delete(`/api/surveys/${id}/responses/${responseId}`);
+      await surveyService.deleteResponse(id, responseId);
       setSurvey((prevSurvey) => ({
         ...prevSurvey,
         responses: prevSurvey.responses.filter((r) => r._id !== responseId),
@@ -50,8 +50,8 @@ const SurveyDetail = () => {
   useEffect(() => {
     const fetchSurvey = async () => {
       try {
-        const response = await axios.get(`/api/surveys/${id}`);
-        setSurvey(response.data);
+        const survey = await surveyService.getSurveyById(id);
+        setSurvey(survey);
       } catch (err) {
         setError('Failed to fetch survey details.');
         console.error(err);

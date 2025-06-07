@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Container, Grid, Typography, Box } from '@mui/material';
+import { surveyService } from '../services';
 import SurveyCard from '../components/surveys/SurveyCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToastNotification from '../components/common/ToastNotification';
@@ -16,9 +16,9 @@ const MySurveys = () => {
     const fetchMySurveys = async () => {
       if (!user) return;
       try {
-        // Assuming an endpoint to get surveys by creatorId
-        const response = await axios.get(`/api/surveys/user/${user._id}`);
-        setSurveys(response.data);
+        // Get surveys created by the current user
+        const response = await surveyService.getSurveys({ creator: user._id });
+        setSurveys(response.surveys || response);
       } catch (err) {
         setError('Failed to fetch your surveys.');
         console.error(err);

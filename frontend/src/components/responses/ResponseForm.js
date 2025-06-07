@@ -17,7 +17,7 @@ const ResponseForm = ({ surveyId, onResponseSubmit }) => {
 
     try {
       const response = await surveyService.submitResponse(surveyId, {
-        content: responseText,
+        text: responseText,
       });
       onResponseSubmit(response);
       setResponseText('');

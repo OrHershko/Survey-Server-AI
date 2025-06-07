@@ -114,7 +114,7 @@ export const surveyService = {
    * Submit a response to a survey
    * @param {string} surveyId - Survey ID
    * @param {Object} responseData - Response data
-   * @param {string} responseData.content - Response content
+   * @param {string} responseData.text - Response text
    * @returns {Promise<Object>} Created response
    */
   async submitResponse(surveyId, responseData) {
@@ -140,7 +140,7 @@ export const surveyService = {
    * @param {string} surveyId - Survey ID
    * @param {string} responseId - Response ID
    * @param {Object} responseData - Updated response data
-   * @param {string} responseData.content - Updated response content
+   * @param {string} responseData.text - Updated response text 
    * @returns {Promise<Object>} Updated response
    */
   async updateResponse(surveyId, responseId, responseData) {

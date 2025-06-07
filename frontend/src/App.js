@@ -11,6 +11,7 @@ import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import NotificationProvider from './components/common/NotificationProvider';
 
 // Lazy-loaded Pages
 const Home = React.lazy(() => import('./pages/Home'));
@@ -21,16 +22,18 @@ const SurveyDetail = React.lazy(() => import('./pages/SurveyDetail'));
 const CreateSurvey = React.lazy(() => import('./pages/CreateSurvey'));
 const MySurveys = React.lazy(() => import('./pages/MySurveys'));
 const MyResponses = React.lazy(() => import('./pages/MyResponses'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading page..." />}>
-              <div className="App">
+        <NotificationProvider>
+          <Router>
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading page..." />}>
+                <div className="App">
                 <Routes>
                   {/* Public routes with layout */}
                   <Route path="/" element={<Layout />}>
@@ -39,6 +42,12 @@ function App() {
                     <Route path="register" element={<Register />} />
                     
                     {/* Protected routes */}
+                    <Route path="dashboard" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    
                     <Route path="surveys" element={
                       <ProtectedRoute>
                         <Surveys />
@@ -81,8 +90,9 @@ function App() {
             </Suspense>
           </ErrorBoundary>
         </Router>
-      </AuthProvider>
-    </ThemeProvider>
+      </NotificationProvider>
+    </AuthProvider>
+  </ThemeProvider>
   );
 }
 

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import authService from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -7,46 +7,80 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('authToken'));
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Here you might want to fetch user profile if you only store the token
-      // For this implementation, we assume user data is also stored or not needed on every load
-      const userData = localStorage.getItem('userData');
+      // Load user data from localStorage if available
+      const userData = authService.getCurrentUser();
       if (userData) {
-        setUser(JSON.parse(userData));
+        setUser(userData);
       }
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
     }
     setIsLoading(false);
   }, [token]);
 
   const login = async (email, password) => {
-    const response = await axios.post('/api/auth/login', { email, password });
-    const { token, user: userData } = response.data;
-    
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userData', JSON.stringify(userData));
-    setToken(token);
-    setUser(userData);
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await authService.login({ email, password });
+      const { token: newToken, user: userData } = response;
+      
+      setToken(newToken);
+      setUser(userData);
+      
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await authService.register(userData);
+      return response;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
+    authService.logout();
     setToken(null);
     setUser(null);
+    setError(null);
+  };
+
+  const clearError = () => {
+    setError(null);
+  };
+
+  const isAuthenticated = () => {
+    return authService.isAuthenticated();
   };
   
   const value = useMemo(() => ({
     user,
     token,
     isLoading,
+    error,
     login,
+    register,
     logout,
-  }), [user, token, isLoading]);
+    clearError,
+    isAuthenticated,
+  }), [user, token, isLoading, error]);
 
   return (
     <AuthContext.Provider value={value}>

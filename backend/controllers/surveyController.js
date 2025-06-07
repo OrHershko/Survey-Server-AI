@@ -47,24 +47,10 @@ const createSurvey = async (req, res, next) => {
  */
 const getSurveys = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, status = 'active' } = req.query;
+    const { page = 1, limit = 10 } = req.query;
 
+    // Return all surveys without any status filtering
     const query = {};
-    if (status === 'active') {
-      query.closed = false;
-      query.expiryDate = { $or: [{ $exists: false }, { $gte: new Date() }] };
-    } else if (status === 'closed') {
-      query.closed = true;
-    } else if (status === 'expired') {
-      query.expiryDate = { $lt: new Date() };
-      query.closed = false; // Ensure it wasn't manually closed before expiry
-    } else if (status === 'all') {
-        // No additional filters for 'all' status
-    } else {
-        // Default to active if status is unrecognized
-        query.closed = false;
-        query.expiryDate = { $or: [{ $exists: false }, { $gte: new Date() }] };
-    }
 
     const options = {
       skip: (parseInt(page, 10) - 1) * parseInt(limit, 10),
@@ -85,7 +71,7 @@ const getSurveys = async (req, res, next) => {
         // responses: undefined // Optionally remove the full responses array if only count is needed for list view
       }));
 
-    logger.info(`Retrieved ${surveysWithResponseCount.length} surveys for page ${page} with limit ${limit} and status '${status}'`);
+    logger.info(`Retrieved ${surveysWithResponseCount.length} surveys for page ${page} with limit ${limit}`);
 
     res.status(200).json({
       surveys: surveysWithResponseCount,

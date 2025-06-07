@@ -180,6 +180,60 @@ The API documentation will be available at `http://localhost:5000/api-docs` when
 - `REACT_APP_API_URL` - Backend API URL (default: http://localhost:5000)
 - `REACT_APP_ENV` - Environment (development/production)
 
+## AI Configuration
+
+### Switching from Mock to Real AI
+
+By default, the system uses mock AI responses for development and testing. To enable real AI functionality:
+
+1. **Get OpenRouter API Key**
+   - Sign up at [OpenRouter](https://openrouter.ai/)
+   - Get an API key that supports DeepSeek models
+   - Note: The system is configured to use `deepseek/deepseek-chat-v3-0324:free`
+
+2. **Configure Environment Variables**
+   Create a `.env` file in the `backend/` directory:
+   ```bash
+   # Production AI Configuration
+   OPENROUTER_API_KEY=your-actual-api-key-here
+   USE_MOCK_LLM=false
+   
+   # Other required variables...
+   MONGODB_URI=your-mongodb-connection-string
+   JWT_SECRET=your-jwt-secret
+   REGISTRATION_SECRET=your-registration-code
+   ```
+
+3. **Restart the Server**
+   ```bash
+   cd backend
+   npm run dev
+   ```
+
+### AI Features Available
+
+1. **Natural Language Search** (`POST /ai/surveys/search`)
+   - Search surveys using natural language queries
+   - Example: "Find surveys about programming languages"
+   - Returns matched surveys with explanations
+
+2. **Survey Summarization** (`POST /api/surveys/:id/summarize`)
+   - Generate AI summaries of survey responses
+   - Only available to survey creators
+   - Uses survey guidelines for context
+
+3. **Response Validation** (`POST /api/surveys/:id/validate-responses`)
+   - Validate responses against survey guidelines
+   - Identifies problematic responses
+   - Returns detailed violation reasons
+
+### Troubleshooting AI Issues
+
+- **JSON Parsing Errors**: The system automatically handles markdown code blocks in AI responses
+- **Rate Limiting**: OpenRouter may have rate limits; check your usage
+- **Model Availability**: Ensure the DeepSeek model is available in your OpenRouter plan
+- **API Key Issues**: Verify your OpenRouter API key is valid and has sufficient credits
+
 ## Testing Strategy
 
 - **Unit Tests**: Individual functions and components

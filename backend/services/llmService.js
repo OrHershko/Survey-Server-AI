@@ -57,6 +57,31 @@ function getPrompt(promptName, variables = {}) {
 }
 
 /**
+ * Extracts JSON content from LLM responses that may be wrapped in markdown code blocks
+ * @param {string} rawResponse - The raw response from the LLM
+ * @returns {object} Parsed JSON object
+ * @throws {Error} If JSON cannot be extracted or parsed
+ */
+function extractAndParseJSON(rawResponse) {
+    let jsonString = rawResponse.trim();
+    
+    // Remove markdown code blocks if present
+    if (jsonString.startsWith('```json')) {
+        jsonString = jsonString.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (jsonString.startsWith('```')) {
+        jsonString = jsonString.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    // Try to parse the JSON
+    try {
+        return JSON.parse(jsonString);
+    } catch (parseError) {
+        logger.error('JSON parsing failed:', parseError, 'Cleaned JSON string:', jsonString);
+        throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+    }
+}
+
+/**
  * Calls the OpenRouter API (DeepSeek model) for chat completions.
  * @param {Array<object>} messages - Array of message objects (e.g., [{ role: 'user', content: 'Hello' }]).
  * @param {string} model - The specific model to use (defaults to DEFAULT_MODEL).
@@ -151,20 +176,16 @@ async function generateSummary(textToSummarize, guidelines, surveyQuestion = "N/
         surveyArea
     });
 
-    // TODO: Uncomment and adapt to call getChatCompletion
-    // try {
-    //     const messages = [{ role: 'user', content: promptContent }];
-    //     const llmResponse = await getChatCompletion(messages, undefined, { /* options like temperature */ });
-    //     const summary = llmResponse.choices[0].message.content;
-    //     logger.info('Summary generated successfully by LLM.');
-    //     return summary;
-    // } catch (error) {
-    //     logger.error('LLM call failed during summary generation:', error);
-    //     throw new Error('Failed to generate summary using LLM.');
-    // }
-
-    // Placeholder until LLM call is active:
-    return new Promise(resolve => setTimeout(() => resolve(`Mock summary based on: ${textToSummarize.substring(0,50)}... and guidelines: ${guidelines}`), 100));
+    try {
+        const messages = [{ role: 'user', content: promptContent }];
+        const llmResponse = await getChatCompletion(messages, undefined, { temperature: 0.7, max_tokens: 1000 });
+        const summary = llmResponse.choices[0].message.content;
+        logger.info('Summary generated successfully by LLM.');
+        return summary;
+    } catch (error) {
+        logger.error('LLM call failed during summary generation:', error);
+        throw new Error('Failed to generate summary using LLM.');
+    }
 }
 
 /**
@@ -183,30 +204,24 @@ async function searchSurveys(query, surveysContextArray) {
         surveysContext: surveysContextString 
     });
 
-    // TODO: Uncomment and adapt to call getChatCompletion
-    // try {
-    //     const messages = [{ role: 'user', content: promptContent }];
-    //     const llmResponse = await getChatCompletion(messages, undefined, { /* options */ });
-    //     const searchResultRaw = llmResponse.choices[0].message.content;
-    //     // Attempt to parse the JSON response from LLM
-    //     try {
-    //         const searchResults = JSON.parse(searchResultRaw);
-    //         logger.info('Survey search successful and response parsed.');
-    //         return searchResults;
-    //     } catch (parseError) {
-    //         logger.error('Failed to parse LLM search response as JSON:', parseError, 'Raw response:', searchResultRaw);
-    //         throw new Error('LLM returned malformed search results.');
-    //     }
-    // } catch (error) {
-    //     logger.error('LLM call failed during survey search:', error);
-    //     throw new Error('Failed to search surveys using LLM.');
-    // }
-
-    // Placeholder until LLM call is active:
-    return new Promise(resolve => setTimeout(() => resolve([
-        { id: "mockId1", title: "Mock Survey 1 based on query", reason: `Matches query '${query}' due to keyword A.` },
-        { id: "mockId2", title: "Mock Survey 2 based on query", reason: `Matches query '${query}' due to keyword B.` }
-    ]), 100));
+    try {
+        const messages = [{ role: 'user', content: promptContent }];
+        const llmResponse = await getChatCompletion(messages, undefined, { temperature: 0.3, max_tokens: 2000 });
+        const searchResultRaw = llmResponse.choices[0].message.content;
+        
+        // Use the helper function to extract and parse JSON
+        try {
+            const searchResults = extractAndParseJSON(searchResultRaw);
+            logger.info('Survey search successful and response parsed.');
+            return searchResults;
+        } catch (parseError) {
+            logger.error('Failed to parse LLM search response as JSON:', parseError, 'Raw response:', searchResultRaw);
+            throw new Error('LLM returned malformed search results.');
+        }
+    } catch (error) {
+        logger.error('LLM call failed during survey search:', error);
+        throw new Error('Failed to search surveys using LLM.');
+    }
 }
 
 /**
@@ -224,30 +239,24 @@ async function validateResponses(responsesArray, guidelines) {
         guidelines 
     });
 
-    // TODO: Uncomment and adapt to call getChatCompletion
-    // try {
-    //     const messages = [{ role: 'user', content: promptContent }];
-    //     const llmResponse = await getChatCompletion(messages, undefined, { /* options */ });
-    //     const validationResultRaw = llmResponse.choices[0].message.content;
-    //     // Attempt to parse the JSON response from LLM
-    //     try {
-    //         const validationResults = JSON.parse(validationResultRaw);
-    //         logger.info('Response validation successful and response parsed.');
-    //         return validationResults;
-    //     } catch (parseError) {
-    //         logger.error('Failed to parse LLM validation response as JSON:', parseError, 'Raw response:', validationResultRaw);
-    //         throw new Error('LLM returned malformed validation results.');
-    //     }
-    // } catch (error) {
-    //     logger.error('LLM call failed during response validation:', error);
-    //     throw new Error('Failed to validate responses using LLM.');
-    // }
-    
-    // Placeholder until LLM call is active:
-    return new Promise(resolve => setTimeout(() => resolve([
-        { responseIndex: 0, reason: `Response '${responsesArray[0]}' (first 20 chars) seems to violate guideline X based on: ${guidelines.substring(0,30)}...` },
-        { responseIndex: responsesArray.length > 1 ? 1 : 0, reason: "Mock validation: Another response issue." }
-    ].slice(0, responsesArray.length)), 100));
+    try {
+        const messages = [{ role: 'user', content: promptContent }];
+        const llmResponse = await getChatCompletion(messages, undefined, { temperature: 0.2, max_tokens: 2000 });
+        const validationResultRaw = llmResponse.choices[0].message.content;
+        
+        // Use the helper function to extract and parse JSON
+        try {
+            const validationResults = extractAndParseJSON(validationResultRaw);
+            logger.info('Response validation successful and response parsed.');
+            return validationResults;
+        } catch (parseError) {
+            logger.error('Failed to parse LLM validation response as JSON:', parseError, 'Raw response:', validationResultRaw);
+            throw new Error('LLM returned malformed validation results.');
+        }
+    } catch (error) {
+        logger.error('LLM call failed during response validation:', error);
+        throw new Error('Failed to validate responses using LLM.');
+    }
 }
 
 module.exports = {

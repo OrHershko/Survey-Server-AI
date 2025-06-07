@@ -17,15 +17,11 @@ import {
 import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSurveys, useAI } from '../hooks';
-import { useAuth } from '../hooks/useAuth';
 import SurveyCard from '../components/surveys/SurveyCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToastNotification from '../components/common/ToastNotification';
-import SearchSurveys from '../components/ai/SearchSurveys';
-
 const Surveys = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const {
     surveys,
     loading,

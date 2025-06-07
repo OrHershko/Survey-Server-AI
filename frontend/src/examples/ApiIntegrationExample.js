@@ -141,7 +141,7 @@ const ApiIntegrationExample = () => {
       {/* Authentication Section */}
       <section style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ddd' }}>
         <h2>Authentication</h2>
-        {isAuthenticated() ? (
+        {isAuthenticated ? (
           <div>
             <p>Welcome, {user?.username || 'User'}!</p>
             <button onClick={logout}>Logout</button>

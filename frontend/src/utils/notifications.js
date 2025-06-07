@@ -273,7 +273,7 @@ export const withErrorNotification = (asyncFn, operation) => {
   };
 };
 
-export default {
+const notificationUtils = {
   NOTIFICATION_TYPES,
   createNotification,
   dismissNotification,
@@ -284,4 +284,6 @@ export default {
   apiNotifications,
   handleApiError,
   withErrorNotification
-}; 
+};
+
+export default notificationUtils; 

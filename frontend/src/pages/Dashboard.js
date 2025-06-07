@@ -46,9 +46,7 @@ const Dashboard = () => {
   const {
     loading: aiLoading,
     generateSummary,
-    validateResponses,
-    searchSurveys,
-    clearError: clearAiError
+    validateResponses
   } = useAI();
 
   const [activeTab, setActiveTab] = useState(0);
@@ -92,7 +90,7 @@ const Dashboard = () => {
 
   const handleGenerateSummary = async (surveyId) => {
     try {
-      const loadingNotification = apiNotifications.ai.summaryGenerating();
+      apiNotifications.ai.summaryGenerating();
       await generateSummary(surveyId);
       apiNotifications.ai.summaryGenerated();
     } catch (error) {

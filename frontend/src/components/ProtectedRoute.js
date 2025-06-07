@@ -13,7 +13,7 @@ const ProtectedRoute = ({ children, requireAuth = true }) => {
   }
 
   // If authentication is required but user is not authenticated
-  if (requireAuth && !isAuthenticated()) {
+  if (requireAuth && !isAuthenticated) {
     // Show session expired notification if user was previously authenticated
     if (location.state?.from && !user) {
       apiNotifications.auth.sessionExpired();
@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children, requireAuth = true }) => {
   }
 
   // If user is authenticated but trying to access auth pages, redirect to dashboard
-  if (!requireAuth && isAuthenticated() && (location.pathname === '/login' || location.pathname === '/register')) {
+  if (!requireAuth && isAuthenticated && (location.pathname === '/login' || location.pathname === '/register')) {
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -10,15 +10,24 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (token) {
-      // Load user data from localStorage if available
+    const initializeAuth = () => {
+      const storedToken = localStorage.getItem('authToken');
       const userData = authService.getCurrentUser();
-      if (userData) {
+      
+      if (storedToken && userData) {
+        setToken(storedToken);
         setUser(userData);
+      } else {
+        // Clear invalid state
+        setToken(null);
+        setUser(null);
+        authService.logout();
       }
-    }
-    setIsLoading(false);
-  }, [token]);
+      setIsLoading(false);
+    };
+
+    initializeAuth();
+  }, []);
 
   const login = async (email, password) => {
     try {
@@ -26,8 +35,9 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       
       const response = await authService.login({ email, password });
-      const { token: newToken, user: userData } = response;
+      const { accessToken: newToken, user: userData } = response;
       
+      // Update state immediately after successful login
       setToken(newToken);
       setUser(userData);
       
@@ -66,9 +76,8 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
-  const isAuthenticated = () => {
-    return authService.isAuthenticated();
-  };
+  // Create a computed isAuthenticated boolean instead of a function
+  const isAuthenticated = !!(token && user);
   
   const value = useMemo(() => ({
     user,
@@ -80,11 +89,11 @@ export const AuthProvider = ({ children }) => {
     logout,
     clearError,
     isAuthenticated,
-  }), [user, token, isLoading, error]);
+  }), [user, token, isLoading, error, isAuthenticated]);
 
   return (
     <AuthContext.Provider value={value}>
-      {!isLoading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

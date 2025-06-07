@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import {
   Container,
@@ -26,7 +26,6 @@ const Register = () => {
   
   const { register, isAuthenticated, error, clearError } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -35,7 +34,7 @@ const Register = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);

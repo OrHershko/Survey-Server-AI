@@ -34,8 +34,8 @@ export const authService = {
       const response = await api.post('/auth/login', credentials);
       
       // Store token and user data in localStorage
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
+      if (response.data.accessToken) {
+        localStorage.setItem('authToken', response.data.accessToken);
         if (response.data.user) {
           localStorage.setItem('userData', JSON.stringify(response.data.user));
         }

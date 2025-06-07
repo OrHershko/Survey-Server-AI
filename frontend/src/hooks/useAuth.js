@@ -1,56 +1,56 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('authToken'));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored authentication on app load
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('userData');
-    
-    if (token && userData) {
-      try {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // Here you might want to fetch user profile if you only store the token
+      // For this implementation, we assume user data is also stored or not needed on every load
+      const userData = localStorage.getItem('userData');
+      if (userData) {
         setUser(JSON.parse(userData));
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
       }
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
     }
-    
     setIsLoading(false);
-  }, []);
+  }, [token]);
 
-  const login = (userData, token) => {
+  const login = async (email, password) => {
+    const response = await axios.post('/api/auth/login', { email, password });
+    const { token, user: userData } = response.data;
+    
     localStorage.setItem('authToken', token);
     localStorage.setItem('userData', JSON.stringify(userData));
+    setToken(token);
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
+    setToken(null);
     setUser(null);
   };
-
-  const getToken = () => {
-    return localStorage.getItem('authToken');
-  };
-
-  const value = {
+  
+  const value = useMemo(() => ({
     user,
+    token,
     isLoading,
     login,
     logout,
-    getToken
-  };
+  }), [user, token, isLoading]);
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };

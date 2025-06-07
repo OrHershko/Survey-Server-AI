@@ -4,39 +4,41 @@ import { Container, Grid, Typography, Box } from '@mui/material';
 import SurveyCard from '../components/surveys/SurveyCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToastNotification from '../components/common/ToastNotification';
-import SearchSurveys from '../components/ai/SearchSurveys';
+import { useAuth } from '../hooks/useAuth';
 
-const Surveys = () => {
+const MySurveys = () => {
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchSurveys = async () => {
+    const fetchMySurveys = async () => {
+      if (!user) return;
       try {
-        const response = await axios.get('/api/surveys');
+        // Assuming an endpoint to get surveys by creatorId
+        const response = await axios.get(`/api/surveys/user/${user._id}`);
         setSurveys(response.data);
       } catch (err) {
-        setError('Failed to fetch surveys. Please try again later.');
+        setError('Failed to fetch your surveys.');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSurveys();
-  }, []);
+    fetchMySurveys();
+  }, [user]);
 
   if (loading) {
-    return <LoadingSpinner message="Fetching surveys..." />;
+    return <LoadingSpinner message="Fetching your surveys..." />;
   }
 
   return (
     <Container>
-      <SearchSurveys />
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Available Surveys
+          My Surveys
         </Typography>
         {error && (
           <ToastNotification
@@ -55,7 +57,7 @@ const Surveys = () => {
             ))
           ) : (
             <Grid item xs={12}>
-              <Typography>No surveys available at the moment.</Typography>
+              <Typography>You have not created any surveys yet.</Typography>
             </Grid>
           )}
         </Grid>
@@ -64,4 +66,4 @@ const Surveys = () => {
   );
 };
 
-export default Surveys; 
+export default MySurveys; 

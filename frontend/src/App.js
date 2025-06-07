@@ -1,63 +1,88 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from './styles/theme';
+import './styles/App.css';
 
 // Layout Components
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import LoadingSpinner from './components/common/LoadingSpinner';
 
-// Pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Surveys from './pages/Surveys';
-
-// Styles
-import './styles/App.css';
+// Lazy-loaded Pages
+const Home = React.lazy(() => import('./pages/Home'));
+const Login = React.lazy(() => import('./pages/Login'));
+const Register = React.lazy(() => import('./pages/Register'));
+const Surveys = React.lazy(() => import('./pages/Surveys'));
+const SurveyDetail = React.lazy(() => import('./pages/SurveyDetail'));
+const CreateSurvey = React.lazy(() => import('./pages/CreateSurvey'));
+const MySurveys = React.lazy(() => import('./pages/MySurveys'));
+const MyResponses = React.lazy(() => import('./pages/MyResponses'));
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            {/* Public routes with layout */}
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-              
-              {/* Protected routes */}
-              <Route path="surveys" element={
-                <ProtectedRoute>
-                  <Surveys />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="my-surveys" element={
-                <ProtectedRoute>
-                  <div>My Surveys (Coming Soon)</div>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="create-survey" element={
-                <ProtectedRoute>
-                  <div>Create Survey (Coming Soon)</div>
-                </ProtectedRoute>
-              } />
-              
-              {/* Catch all route */}
-              <Route path="*" element={
-                <div>
-                  <h1>404 - Page Not Found</h1>
-                  <p>The page you're looking for doesn't exist.</p>
-                </div>
-              } />
-            </Route>
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AuthProvider>
+        <Router>
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading page..." />}>
+              <div className="App">
+                <Routes>
+                  {/* Public routes with layout */}
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route path="login" element={<Login />} />
+                    <Route path="register" element={<Register />} />
+                    
+                    {/* Protected routes */}
+                    <Route path="surveys" element={
+                      <ProtectedRoute>
+                        <Surveys />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="surveys/:id" element={
+                      <ProtectedRoute>
+                        <SurveyDetail />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="my-surveys" element={
+                      <ProtectedRoute>
+                        <MySurveys />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="my-responses" element={
+                      <ProtectedRoute>
+                        <MyResponses />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="create-survey" element={
+                      <ProtectedRoute>
+                        <CreateSurvey />
+                      </ProtectedRoute>
+                    } />
+                    
+                    {/* Catch all route */}
+                    <Route path="*" element={
+                      <div>
+                        <h1>404 - Page Not Found</h1>
+                        <p>The page you're looking for doesn't exist.</p>
+                      </div>
+                    } />
+                  </Route>
+                </Routes>
+              </div>
+            </Suspense>
+          </ErrorBoundary>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

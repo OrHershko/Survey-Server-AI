@@ -47,7 +47,7 @@ const CountdownTimer = ({ expiryDate, closed }) => {
 
   // If expiryDate is null or survey is closed, show Done
   if (expiryDate === null || closed) {
-    return <Typography variant="caption" color="error">Done</Typography>;
+    return <Typography variant="caption" color="error">Closed</Typography>;
   }
 
   if (timeLeft?.expired) {
@@ -55,7 +55,7 @@ const CountdownTimer = ({ expiryDate, closed }) => {
   }
 
   if (!timeLeft) {
-    return <Typography variant="caption" color="error">Done</Typography>;
+    return <Typography variant="caption" color="error">Closed</Typography>;
   }
 
   return (

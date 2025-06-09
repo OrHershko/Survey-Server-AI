@@ -59,7 +59,7 @@ const Dashboard = () => {
 
   // Fetch user's surveys on mount
   useEffect(() => {
-    fetchSurveys({ creator: user?.id }).catch(err => {
+    fetchSurveys({ creator: user?._id }).catch(err => {
       console.error('Failed to fetch user surveys:', err);
     });
   }, [user, fetchSurveys]);

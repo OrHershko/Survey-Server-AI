@@ -183,6 +183,50 @@ export const surveyService = {
       }
       throw new Error('Failed to delete response. Please try again.');
     }
+  },
+
+  /**
+   * Get a user's response for a specific survey
+   * @param {string} surveyId - Survey ID
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} User response for the survey
+   */
+  async getUserResponseForSurvey(surveyId, userId) {
+    try {
+      const response = await api.get(`/surveys/${surveyId}/responses/${userId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 403) {
+        throw new Error('You are not authorized to access this response.');
+      }
+      if (error.response?.status === 404) {
+        throw new Error('No response found for this user in this survey.');
+      }
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Failed to fetch user response. Please try again.');
+    }
+  },
+
+  /**
+   * Get all responses by a specific user across all surveys
+   * @param {string} userId - User ID
+   * @returns {Promise<Array>} All user responses
+   */
+  async getAllUserResponses(userId) {
+    try {
+      const response = await api.get(`/surveys/responses/${userId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 403) {
+        throw new Error('You are not authorized to access these responses.');
+      }
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Failed to fetch user responses. Please try again.');
+    }
   }
 };
 

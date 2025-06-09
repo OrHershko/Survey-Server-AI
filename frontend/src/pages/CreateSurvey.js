@@ -20,10 +20,16 @@ const CreateSurvey = () => {
   const [expiryDate, setExpiryDate] = useState(dayjs().add(7, 'day'));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    navigate('/dashboard');
   };
 
   const handleSubmit = async (e) => {
@@ -34,7 +40,14 @@ const CreateSurvey = () => {
     try {
       const surveyData = { ...formData, expiryDate: expiryDate.toISOString() };
       const response = await surveyService.createSurvey(surveyData);
-      navigate(`/surveys/${response._id}`);
+      
+      // Show success message
+      setShowSuccess(true);
+      
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
     } catch (err) {
       setError('Failed to create survey. Please check your input and try again.');
       console.error(err);
@@ -108,6 +121,14 @@ const CreateSurvey = () => {
           </Box>
         </form>
       </Paper>
+      
+      <ToastNotification
+        open={showSuccess}
+        message="Survey created successfully! Redirecting to dashboard..."
+        severity="success"
+        onClose={handleSuccessClose}
+      />
+      
       <ToastNotification
         open={!!error}
         message={error}

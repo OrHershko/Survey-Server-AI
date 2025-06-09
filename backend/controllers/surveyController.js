@@ -47,10 +47,36 @@ const createSurvey = async (req, res, next) => {
  */
 const getSurveys = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, creator, status, search } = req.query;
 
-    // Return all surveys without any status filtering
+    // Build query based on parameters
     const query = {};
+
+    // Filter by creator if provided (for "My Surveys" page)
+    if (creator) {
+      query.creator = creator;
+    }
+
+    // Filter by status if provided
+    if (status && status !== 'all') {
+      if (status === 'active') {
+        query.closed = false;
+        query.expiryDate = { $gt: new Date() };
+      } else if (status === 'closed') {
+        query.closed = true;
+      } else if (status === 'expired') {
+        query.closed = false;
+        query.expiryDate = { $lte: new Date() };
+      }
+    }
+
+    // Search by title or area if provided
+    if (search && search.trim()) {
+      query.$or = [
+        { title: { $regex: search.trim(), $options: 'i' } },
+        { area: { $regex: search.trim(), $options: 'i' } }
+      ];
+    }
 
     const options = {
       skip: (parseInt(page, 10) - 1) * parseInt(limit, 10),
@@ -443,6 +469,134 @@ const deleteResponse = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get a user's response for a specific survey
+ * @route   GET /surveys/:id/responses/:user_id
+ * @access  Private (User can only get their own response)
+ */
+const getUserResponseForSurvey = async (req, res, next) => {
+  try {
+    const { id: surveyId, user_id: userId } = req.params;
+    const requestingUserId = req.user._id; // From protect middleware
+
+    // Users can only access their own responses
+    // Convert both to strings for comparison
+    if (userId.toString() !== requestingUserId.toString()) {
+      logger.warn(`User ${requestingUserId} attempted to access response for user ${userId} in survey ${surveyId}.`);
+      return res.status(403).json({ message: 'Not authorized to access this response.' });
+    }
+
+    // Find the survey with the specific response
+    const survey = await SurveyService.findById(surveyId, '', [
+      { path: 'creator', select: 'username' },
+      { path: 'responses.user', select: 'username' }
+    ]);
+
+    if (!survey) {
+      logger.warn(`Survey not found with id: ${surveyId}`);
+      return res.status(404).json({ message: 'Survey not found.' });
+    }
+
+    // Find the user's response in this survey
+    const userResponse = survey.responses.find(response => 
+      response.user._id.toString() === userId
+    );
+
+    if (!userResponse) {
+      logger.warn(`No response found for user ${userId} in survey ${surveyId}.`);
+      return res.status(404).json({ message: 'No response found for this user in this survey.' });
+    }
+
+    // Format the response with survey context
+    const responseWithContext = {
+      _id: userResponse._id,
+      text: userResponse.text,
+      createdAt: userResponse.createdAt,
+      updatedAt: userResponse.updatedAt,
+      survey: {
+        _id: survey._id,
+        title: survey.title,
+        area: survey.area,
+        question: survey.question
+      }
+    };
+
+    logger.info(`Retrieved response for user ${userId} in survey ${surveyId}.`);
+    res.status(200).json(responseWithContext);
+
+  } catch (error) {
+    logger.error(`Error in getUserResponseForSurvey controller (Survey ID: ${req.params.id}, User ID: ${req.params.user_id}):`, error);
+    if (!error.statusCode) {
+        error.statusCode = 500;
+    }
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get all responses by a specific user across all surveys
+ * @route   GET /surveys/responses/:user_id
+ * @access  Private (User can only get their own responses)
+ */
+const getAllUserResponses = async (req, res, next) => {
+  try {
+    const { user_id: userId } = req.params;
+    const requestingUserId = req.user._id; // From protect middleware
+
+    // Users can only access their own responses
+    // Convert both to strings for comparison
+    if (userId.toString() !== requestingUserId.toString()) {
+      logger.warn(`User ${requestingUserId} attempted to access responses for user ${userId}.`);
+      return res.status(403).json({ message: 'Not authorized to access these responses.' });
+    }
+
+    // Find all surveys that contain responses from this user
+    const surveys = await SurveyService.find(
+      { 'responses.user': userId },
+      {},
+      '',
+      [
+        { path: 'creator', select: 'username' },
+        { path: 'responses.user', select: 'username' }
+      ]
+    );
+
+    // Extract and format user responses with survey context
+    const userResponses = [];
+    surveys.forEach(survey => {
+      survey.responses.forEach(response => {
+        if (response.user._id.toString() === userId) {
+          userResponses.push({
+            _id: response._id,
+            text: response.text,
+            createdAt: response.createdAt,
+            updatedAt: response.updatedAt,
+            survey: {
+              _id: survey._id,
+              title: survey.title,
+              area: survey.area,
+              question: survey.question
+            }
+          });
+        }
+      });
+    });
+
+    // Sort by creation date (newest first)
+    userResponses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    logger.info(`Retrieved ${userResponses.length} responses for user ${userId}.`);
+    res.status(200).json(userResponses);
+
+  } catch (error) {
+    logger.error(`Error in getAllUserResponses controller (User ID: ${req.params.user_id}):`, error);
+    if (!error.statusCode) {
+        error.statusCode = 500;
+    }
+    next(error);
+  }
+};
+
 module.exports = {
   createSurvey,
   getSurveys,
@@ -452,5 +606,7 @@ module.exports = {
   submitResponse,
   updateResponse,
   deleteResponse,
+  getUserResponseForSurvey,
+  getAllUserResponses,
   // Other survey controller functions will be added here
 }; 

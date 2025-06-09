@@ -21,7 +21,7 @@ const SurveyDetail = () => {
   const handleNewResponse = (response) => {
     setSurvey((prevSurvey) => ({
       ...prevSurvey,
-      responses: [...prevSurvey.responses, response],
+      responses: [...(prevSurvey.responses || []), response],
     }));
   };
 
@@ -34,7 +34,7 @@ const SurveyDetail = () => {
       await surveyService.deleteResponse(id, responseId);
       setSurvey((prevSurvey) => ({
         ...prevSurvey,
-        responses: prevSurvey.responses.filter((r) => r._id !== responseId),
+        responses: (prevSurvey.responses || []).filter((r) => r._id !== responseId),
       }));
     } catch (err) {
       setError('Failed to delete response.');
@@ -100,19 +100,19 @@ const SurveyDetail = () => {
             <ResponseForm surveyId={survey._id} onResponseSubmit={handleNewResponse} />
           )}
 
-          {user && survey && user._id === survey.creator._id && (
+          {user && survey && user.id === survey.creator._id && (
             <ResponseList 
-              responses={survey.responses}
+              responses={survey.responses || []}
               onEdit={handleEditResponse}
               onDelete={handleDeleteResponse}
             />
           )}
 
-          {(survey.isSummaryPublic || (user && user._id === survey.creator._id)) && (
+          {(survey.isSummaryPublic || (user && user.id === survey.creator._id)) && (
             <SurveySummary survey={survey} onSummaryUpdate={handleSummaryUpdate} />
           )}
 
-          {user && user._id === survey.creator._id && (
+          {user && user.id === survey.creator._id && (
             <ResponseValidation surveyId={survey._id} />
           )}
         </Paper>

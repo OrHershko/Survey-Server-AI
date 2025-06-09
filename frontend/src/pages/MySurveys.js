@@ -17,7 +17,7 @@ const MySurveys = () => {
       if (!user) return;
       try {
         // Get surveys created by the current user
-        const response = await surveyService.getSurveys({ creator: user._id });
+        const response = await surveyService.getSurveys({ creator: user.id });
         setSurveys(response.surveys || response);
       } catch (err) {
         setError('Failed to fetch your surveys.');

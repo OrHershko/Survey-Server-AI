@@ -33,7 +33,7 @@ const ResponseList = ({ responses, onEdit, onDelete }) => {
             key={response._id}
             divider
             secondaryAction={
-              user && user._id === response.user && (
+              user && user.id === response.user && (
                 <>
                   <IconButton edge="end" aria-label="edit" onClick={() => onEdit(response)}>
                     <EditIcon />

@@ -1,5 +1,5 @@
 const express = require('express');
-const { createSurvey, getSurveys, getSurveyById, closeSurvey, updateSurveyExpiry, submitResponse, updateResponse, deleteResponse } = require('../controllers/surveyController');
+const { createSurvey, getSurveys, getSurveyById, closeSurvey, updateSurveyExpiry, submitResponse, updateResponse, deleteResponse, getUserResponseForSurvey, getAllUserResponses } = require('../controllers/surveyController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -13,6 +13,11 @@ router.post('/', protect, createSurvey);
 // @desc    Get all surveys with pagination and filtering
 // @access  Public
 router.get('/', getSurveys);
+
+// @route   GET /surveys/responses/:user_id
+// @desc    Get all responses by a specific user across all surveys
+// @access  Private (User can only get their own responses)
+router.get('/responses/:user_id', protect, getAllUserResponses);
 
 // @route   GET /surveys/:id
 // @desc    Get a single survey by its ID
@@ -34,6 +39,11 @@ router.patch('/:id/expiry', protect, updateSurveyExpiry);
 // @desc    Submit a response to a survey
 // @access  Private (Requires authentication)
 router.post('/:id/responses', protect, submitResponse);
+
+// @route   GET /surveys/:id/responses/:user_id
+// @desc    Get a user's response for a specific survey
+// @access  Private (User can only get their own response)
+router.get('/:id/responses/:user_id', protect, getUserResponseForSurvey);
 
 // @route   PUT /surveys/:id/responses/:responseId
 // @desc    Update a user's response to a survey

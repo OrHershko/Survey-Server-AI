@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { 
-  AppBar, Toolbar, Typography, Button, Box, Link, IconButton, Drawer, List, ListItem, ListItemText, useTheme, useMediaQuery 
+  AppBar, Toolbar, Typography, Button, Box, Link, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText, useTheme, useMediaQuery 
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 
@@ -24,6 +24,11 @@ const Header = () => {
 
   const navLinks = (
     <>
+      {user && (
+        <Button color="inherit" component={RouterLink} to="/dashboard">
+          Dashboard
+        </Button>
+      )}
       <Button color="inherit" component={RouterLink} to="/surveys">
         Surveys
       </Button>
@@ -61,31 +66,52 @@ const Header = () => {
         Survey Server
       </Typography>
       <List>
-        <ListItem button component={RouterLink} to="/surveys">
-          <ListItemText primary="Surveys" />
+        {user && (
+          <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to="/dashboard">
+              <ListItemText primary="Dashboard" />
+            </ListItemButton>
+          </ListItem>
+        )}
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/surveys">
+            <ListItemText primary="Surveys" />
+          </ListItemButton>
         </ListItem>
         {user ? (
           <>
-            <ListItem button component={RouterLink} to="/my-surveys">
-              <ListItemText primary="My Surveys" />
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/my-surveys">
+                <ListItemText primary="My Surveys" />
+              </ListItemButton>
             </ListItem>
-            <ListItem button component={RouterLink} to="/my-responses">
-              <ListItemText primary="My Responses" />
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/my-responses">
+                <ListItemText primary="My Responses" />
+              </ListItemButton>
             </ListItem>
-            <ListItem button component={RouterLink} to="/create-survey">
-              <ListItemText primary="Create Survey" />
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/create-survey">
+                <ListItemText primary="Create Survey" />
+              </ListItemButton>
             </ListItem>
-            <ListItem button onClick={handleLogout}>
-              <ListItemText primary="Logout" />
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleLogout}>
+                <ListItemText primary="Logout" />
+              </ListItemButton>
             </ListItem>
           </>
         ) : (
           <>
-            <ListItem button component={RouterLink} to="/login">
-              <ListItemText primary="Login" />
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/login">
+                <ListItemText primary="Login" />
+              </ListItemButton>
             </ListItem>
-            <ListItem button component={RouterLink} to="/register">
-              <ListItemText primary="Register" />
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/register">
+                <ListItemText primary="Register" />
+              </ListItemButton>
             </ListItem>
           </>
         )}

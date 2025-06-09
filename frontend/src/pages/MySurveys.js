@@ -111,7 +111,11 @@ const MySurveys = () => {
             surveys.map((survey) => (
               <Grid item key={survey._id} xs={12} sm={6} md={4}>
                 <Box sx={{ position: 'relative' }}>
-                  <SurveyCard survey={survey} />
+                  <SurveyCard 
+                    survey={survey} 
+                    showControlButton={true} 
+                    isCreator={true} 
+                  />
                   {!survey.closed && (
                     <Box sx={{ mt: 1 }}>
                       <Button

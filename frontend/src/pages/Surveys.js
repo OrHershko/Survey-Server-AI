@@ -205,7 +205,7 @@ const Surveys = () => {
           {displaySurveys.length > 0 ? (
             displaySurveys.map((survey) => (
               <Grid item key={survey._id} xs={12} sm={6} md={4}>
-                <SurveyCard survey={survey} />
+                <SurveyCard survey={survey} showAddResponse={true} />
               </Grid>
             ))
           ) : (

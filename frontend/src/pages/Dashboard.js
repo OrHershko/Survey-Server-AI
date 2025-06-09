@@ -194,39 +194,8 @@ const Dashboard = () => {
             size="small" 
             onClick={() => navigate(`/surveys/${survey._id}`)}
           >
-            View Details
+            Add Response
           </Button>
-          
-          {isActive && (
-            <Button 
-              size="small" 
-              onClick={() => handleCloseSurvey(survey._id)}
-              disabled={surveysLoading}
-            >
-              Close
-            </Button>
-          )}
-          
-          {responseCount > 0 && !survey.summary && (
-            <Button 
-              size="small" 
-              onClick={() => handleGenerateSummary(survey._id)}
-              disabled={aiLoading}
-              startIcon={<PsychologyIcon />}
-            >
-              Summarize
-            </Button>
-          )}
-          
-          {responseCount > 0 && (
-            <Button 
-              size="small" 
-              onClick={() => handleValidateResponses(survey._id)}
-              disabled={aiLoading}
-            >
-              Validate
-            </Button>
-          )}
         </CardActions>
       </Card>
     );

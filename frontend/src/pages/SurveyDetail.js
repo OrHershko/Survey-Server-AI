@@ -18,10 +18,20 @@ const SurveyDetail = () => {
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  const handleNewResponse = (response) => {
+  const handleNewResponse = (responseData) => {
+    // The response from the backend has user as an ID, but we need to populate it
+    // with current user info to match the format of other responses
+    const responseWithUser = {
+      ...responseData.response, // Extract the response object from the backend response
+      user: {
+        _id: user.id,
+        username: user.username || user.email || 'You'
+      }
+    };
+
     setSurvey((prevSurvey) => ({
       ...prevSurvey,
-      responses: [...(prevSurvey.responses || []), response],
+      responses: [...(prevSurvey.responses || []), responseWithUser],
     }));
   };
 

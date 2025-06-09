@@ -23,6 +23,7 @@ const CreateSurvey = React.lazy(() => import('./pages/CreateSurvey'));
 const MySurveys = React.lazy(() => import('./pages/MySurveys'));
 const MyResponses = React.lazy(() => import('./pages/MyResponses'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const ControlSurvey = React.lazy(() => import('./pages/ControlSurvey'));
 
 function App() {
   return (
@@ -56,6 +57,12 @@ function App() {
                     <Route path="surveys/:id" element={
                       <ProtectedRoute>
                         <SurveyDetail />
+                      </ProtectedRoute>
+                    } />
+                    
+                    <Route path="control-survey/:id" element={
+                      <ProtectedRoute>
+                        <ControlSurvey />
                       </ProtectedRoute>
                     } />
                     

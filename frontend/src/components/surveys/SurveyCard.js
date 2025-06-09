@@ -10,7 +10,12 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 import CountdownTimer from '../common/CountdownTimer';
 
-const SurveyCard = ({ survey }) => {
+const SurveyCard = ({ 
+  survey, 
+  showControlButton = false, 
+  isCreator = false, 
+  showAddResponse = false 
+}) => {
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardContent sx={{ flexGrow: 1 }}>
@@ -28,13 +33,23 @@ const SurveyCard = ({ survey }) => {
         </Box>
       </CardContent>
       <CardActions>
-        <Button
-          component={RouterLink}
-          to={`/surveys/${survey._id}`}
-          size="small"
-        >
-          View Details
-        </Button>
+        {showControlButton && isCreator ? (
+          <Button
+            component={RouterLink}
+            to={`/control-survey/${survey._id}`}
+            size="small"
+          >
+            View Details
+          </Button>
+        ) : showAddResponse ? (
+          <Button
+            component={RouterLink}
+            to={`/surveys/${survey._id}`}
+            size="small"
+          >
+            Add Response
+          </Button>
+        ) : null}
       </CardActions>
     </Card>
   );

@@ -34,7 +34,22 @@ const ResponseForm = ({ surveyId, onResponseSubmit }) => {
         navigate('/dashboard');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit response.');
+      console.error('Response submission error:', err);
+      
+      // More robust error handling
+      let errorMessage = 'Failed to submit response.';
+      
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (!navigator.onLine) {
+        errorMessage = 'No internet connection. Please check your network and try again.';
+      } else if (err.code === 'NETWORK_ERROR' || err.request) {
+        errorMessage = 'Unable to connect to the server. Please check if the backend is running.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -74,7 +89,7 @@ const ResponseForm = ({ surveyId, onResponseSubmit }) => {
         />
         <LoadingButton
           type="submit"
-          loading={loading}
+          isLoading={loading}
           variant="contained"
           color="primary"
           disabled={!user}

@@ -24,7 +24,7 @@ const SurveyCard = ({ survey }) => {
           <Typography variant="caption" display="block" color="text.secondary">
             Area: {survey.area}
           </Typography>
-          <CountdownTimer expiryDate={survey.expiryDate} />
+          <CountdownTimer expiryDate={survey.expiryDate} closed={survey.closed} />
         </Box>
       </CardContent>
       <CardActions>

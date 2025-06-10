@@ -26,6 +26,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   People as PeopleIcon,
+  QueryBuilder as QueryBuilderIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useSurveys, useAI } from '../hooks';
@@ -59,17 +60,22 @@ const Dashboard = () => {
 
   // Fetch user's surveys on mount
   useEffect(() => {
-    fetchSurveys({ creator: user?._id }).catch(err => {
-      console.error('Failed to fetch user surveys:', err);
-    });
+    if (user?.id) {
+      console.log('Dashboard fetching surveys for user:', user.id);
+      fetchSurveys({ creator: user.id }).catch(err => {
+        console.error('Failed to fetch user surveys:', err);
+      });
+    }
   }, [user, fetchSurveys]);
 
-  // Calculate stats from surveys
+  // Calculate stats from surveys (Dashboard only shows user's own surveys)
   useEffect(() => {
     const totalSurveys = surveys.length;
     const activeSurveys = surveys.filter(s => !s.closed && new Date(s.expiryDate) > new Date()).length;
-    const totalResponses = surveys.reduce((acc, s) => acc + (s.responses?.length || 0), 0);
-    const summariesGenerated = surveys.filter(s => s.summary).length;
+    const totalResponses = surveys.reduce((acc, s) => acc + (s.responseCount || s.responses?.length || 0), 0);
+    
+    // Count all summaries since Dashboard only shows user's own surveys
+    const summariesGenerated = surveys.filter(s => s.summary && s.summary.text).length;
 
     setStats({
       totalSurveys,
@@ -137,13 +143,15 @@ const Dashboard = () => {
       <Card elevation={1} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <CardContent sx={{ flexGrow: 1 }}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-            <Typography variant="h6" component="h3" gutterBottom>
+            <Typography variant="h6" component="h3" gutterBottom onClick={() => { navigate(`/control-survey/${survey._id}`)}} sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>
               {survey.title}
             </Typography>
             <Chip 
               label={isActive ? 'Active' : 'Closed'} 
               color={isActive ? 'success' : 'default'}
               size="small"
+              clickable={false}
+              onClick={() => {}}
             />
           </Box>
           
@@ -164,6 +172,16 @@ const Dashboard = () => {
               label={`${responseCount} responses`} 
               size="small" 
               variant="outlined"
+              clickable={false}
+              onClick={() => {}}
+            />
+            <Chip 
+              icon={<QueryBuilderIcon />} 
+              label={new Date(survey.expiryDate).toLocaleDateString()} 
+              size="small" 
+              variant="outlined"
+              clickable={false}
+              onClick={() => {}}
             />
             {survey.summary && (
               <Chip 
@@ -172,6 +190,8 @@ const Dashboard = () => {
                 size="small" 
                 color="success" 
                 variant="outlined"
+                clickable={false}
+                onClick={() => {}}
               />
             )}
             {hasValidationIssues && (
@@ -180,6 +200,8 @@ const Dashboard = () => {
                 size="small" 
                 color="warning" 
                 variant="outlined"
+                clickable={false}
+                onClick={() => {}}
               />
             )}
           </Box>
@@ -192,9 +214,9 @@ const Dashboard = () => {
         <CardActions>
           <Button 
             size="small" 
-            onClick={() => navigate(`/surveys/${survey._id}`)}
+            onClick={() => navigate(`/control-survey/${survey._id}`)}
           >
-            Add Response
+            View Details
           </Button>
         </CardActions>
       </Card>

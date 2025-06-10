@@ -24,21 +24,24 @@ const generateSurveySummary = asyncHandler(async (req, res, next) => {
     }
 
     // Compile responses - this might need more specific logic based on your Survey model
-    const responsesText = survey.responses.map(r => r.responseText).join('\n---\n'); // Example
+    const responsesText = survey.responses.map(r => r.text).join('\n---\n');
     if (!responsesText || responsesText.trim() === '') {
         //return next(new AppError('No responses available to summarize', 400));
         return res.status(400).json({ message: 'No responses available to summarize' });
     }
 
     try {
-        const summary = await llmService.generateSummary(
+        const summaryText = await llmService.generateSummary(
             responsesText, 
             survey.summaryInstructions || survey.guidelines,
             survey.question,
             survey.area
         );
-        survey.summary = summary;
-        survey.summaryLastGenerated = Date.now();
+        survey.summary = {
+            text: summaryText,
+            generatedAt: new Date(),
+            isVisible: false
+        };
         await survey.save();
         res.status(200).json({ 
             success: true, 
@@ -82,13 +85,13 @@ const toggleSummaryVisibility = asyncHandler(async (req, res, next) => {
         return res.status(400).json({ message: 'No summary available to toggle visibility. Generate a summary first.' });
     }
 
-    survey.summaryVisibleToRespondents = isVisible;
+    survey.summary.isVisible = isVisible;
     await survey.save();
 
     res.status(200).json({
         success: true,
         message: `Summary visibility updated to ${isVisible ? 'visible' : 'hidden'}`,
-        summaryVisibleToRespondents: survey.summaryVisibleToRespondents
+        survey: survey
     });
 });
 
@@ -143,7 +146,7 @@ const validateSurveyResponses = asyncHandler(async (req, res, next) => {
     }
 
     // Extract response texts for validation
-    const responseTexts = survey.responses.map(r => r.responseText); // Assuming responseText field
+    const responseTexts = survey.responses.map(r => r.text);
 
     try {
         const validationResults = await llmService.validateResponses(responseTexts, survey.guidelines);

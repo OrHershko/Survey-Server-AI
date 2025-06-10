@@ -164,8 +164,9 @@ const MyResponses = () => {
                 <React.Fragment key={response._id}>
                   <ListItem
                     alignItems="flex-start"
+                    sx={{ pl: 2, pr: 2 }}
                     secondaryAction={
-                      <Box>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
                         <IconButton 
                           edge="end" 
                           aria-label="edit" 
@@ -186,6 +187,7 @@ const MyResponses = () => {
                     }
                   >
                     <ListItemText
+                      sx={{ pr: 10 }}
                       primary={
                         <Box>
                           <Typography 

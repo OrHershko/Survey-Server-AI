@@ -28,6 +28,7 @@ import SurveySummary from '../components/ai/SurveySummary';
 import ResponseValidation from '../components/ai/ResponseValidation';
 import { useAuth } from '../hooks/useAuth';
 import CountdownTimer from '../components/common/CountdownTimer';
+import EditResponseModal from '../components/responses/EditResponseModal';
 
 const ControlSurvey = () => {
   const { id } = useParams();
@@ -37,6 +38,8 @@ const ControlSurvey = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const { user } = useAuth();
+  const [editingResponse, setEditingResponse] = useState(null);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
 
   const handleSummaryUpdate = (updatedSurvey) => {
     setSurvey(updatedSurvey);
@@ -77,8 +80,26 @@ const ControlSurvey = () => {
   };
 
   const handleEditResponse = (response) => {
-    // For now, we'll just log this. A modal would be used in a full implementation.
-    console.log('Editing response:', response);
+    setEditingResponse(response);
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateResponse = async (updatedResponse) => {
+    try {
+      await surveyService.updateResponse(id, updatedResponse._id, { text: updatedResponse.text });
+      setSurvey((prevSurvey) => ({
+        ...prevSurvey,
+        responses: (prevSurvey.responses || []).map((r) =>
+          r._id === updatedResponse._id ? updatedResponse : r
+        ),
+      }));
+      setSuccess('Response updated successfully.');
+      setEditModalOpen(false);
+      setEditingResponse(null);
+    } catch (err) {
+      console.error('Error updating response:', err);
+      setError('Failed to update response.');
+    }
   };
 
   useEffect(() => {
@@ -125,7 +146,7 @@ const ControlSurvey = () => {
   }
 
   const isActive = !survey.closed && new Date(survey.expiryDate) > new Date();
-  const responseCount = survey.responses?.length || 0;
+  const responseCount = survey.responseCount || survey.responses?.length || 0;
 
   return (
     <Container>
@@ -140,6 +161,13 @@ const ControlSurvey = () => {
         message={success}
         severity="success"
         onClose={() => setSuccess(null)}
+      />
+
+      <EditResponseModal
+        open={isEditModalOpen}
+        response={editingResponse}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleUpdateResponse}
       />
 
       {/* Header */}
@@ -171,6 +199,8 @@ const ControlSurvey = () => {
             label={isActive ? 'Active' : 'Closed'}
             color={isActive ? 'success' : 'default'}
             icon={isActive ? <CheckCircleIcon /> : <CancelIcon />}
+            clickable={false}
+            onClick={() => {}}
           />
         </Box>
 
@@ -249,12 +279,12 @@ const ControlSurvey = () => {
               Participants can only edit or delete their own responses. Use this power responsibly.
             </Typography>
           </Alert>
-          <ResponseList 
-            responses={survey.responses || []}
-            onEdit={handleEditResponse}
+          <ResponseList
+            responses={survey.responses}
             onDelete={handleDeleteResponse}
-            allowOwnerDelete={true}
-            isOwnerView={true}
+            onEdit={handleEditResponse}
+            currentUserId={user?.id}
+            creatorId={survey.creator._id}
           />
         </Box>
       ) : (
@@ -277,7 +307,7 @@ const ControlSurvey = () => {
             <Typography variant="h5" gutterBottom>
               AI Analysis
             </Typography>
-            <SurveySummary survey={survey} onSummaryUpdate={handleSummaryUpdate} />
+            <SurveySummary survey={survey} onSummaryUpdate={handleSummaryUpdate} currentUserId={user?.id} />
           </Box>
 
           <Box sx={{ mb: 4 }}>

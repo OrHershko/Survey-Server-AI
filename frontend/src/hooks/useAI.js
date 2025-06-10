@@ -52,7 +52,7 @@ export const useAI = () => {
       setSearchResults([]); // Clear previous results
       
       const response = await aiService.searchSurveysNLP({ query, limit });
-      setSearchResults(response.results || response.surveys || []);
+      setSearchResults(response.results || []);
       
       return response;
     } catch (err) {

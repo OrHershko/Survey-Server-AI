@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Typography, Box, Paper, Divider } from '@mui/material';
+import { Container, Typography, Box, Paper, Divider, Alert } from '@mui/material';
 import { surveyService } from '../services';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToastNotification from '../components/common/ToastNotification';
@@ -10,6 +10,7 @@ import SurveySummary from '../components/ai/SurveySummary';
 import ResponseValidation from '../components/ai/ResponseValidation';
 import { useAuth } from '../hooks/useAuth';
 import CountdownTimer from '../components/common/CountdownTimer';
+import EditResponseModal from '../components/responses/EditResponseModal';
 
 const SurveyDetail = () => {
   const { id } = useParams();
@@ -17,6 +18,14 @@ const SurveyDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+  const [editingResponse, setEditingResponse] = useState(null);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [success, setSuccess] = useState(null);
+
+  // Check if user has responded - use backend-provided field for non-creators, or check responses array for creators
+  const userHasResponded = user && survey ? 
+    (survey.userHasResponded !== undefined ? survey.userHasResponded : 
+     survey.responses?.some(r => r.user?._id === user.id)) : false;
 
   const handleNewResponse = (responseData) => {
     // The response from the backend has user as an ID, but we need to populate it
@@ -53,14 +62,41 @@ const SurveyDetail = () => {
   };
 
   const handleEditResponse = (response) => {
-    // For now, we'll just log this. A modal would be used in a full implementation.
-    console.log('Editing response:', response);
+    setEditingResponse(response);
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateResponse = async (updatedResponse) => {
+    try {
+      await surveyService.updateResponse(id, updatedResponse._id, { text: updatedResponse.text });
+      setSurvey((prevSurvey) => ({
+        ...prevSurvey,
+        responses: (prevSurvey.responses || []).map((r) =>
+          r._id === updatedResponse._id ? updatedResponse : r
+        ),
+      }));
+      setSuccess('Response updated successfully.');
+      setEditModalOpen(false);
+      setEditingResponse(null);
+    } catch (err) {
+      console.error('Error updating response:', err);
+      setError('Failed to update response.');
+    }
   };
 
   useEffect(() => {
     const fetchSurvey = async () => {
       try {
         const survey = await surveyService.getSurveyById(id);
+        console.log('Survey data received:', {
+          id: survey._id,
+          title: survey.title,
+          creator: survey.creator._id,
+          currentUser: user?.id,
+          hasSummary: !!survey.summary,
+          summaryVisible: survey.summary?.isVisible,
+          summaryText: survey.summary?.text ? 'Present' : 'Not present'
+        });
         setSurvey(survey);
       } catch (err) {
         setError('Failed to fetch survey details.');
@@ -71,7 +107,7 @@ const SurveyDetail = () => {
     };
 
     fetchSurvey();
-  }, [id]);
+  }, [id, user]);
 
   if (loading) {
     return <LoadingSpinner message="Loading survey..." />;
@@ -84,6 +120,18 @@ const SurveyDetail = () => {
         message={error}
         severity="error"
         onClose={() => setError(null)}
+      />
+      <ToastNotification
+        open={!!success}
+        message={success}
+        severity="success"
+        onClose={() => setSuccess(null)}
+      />
+      <EditResponseModal
+        open={isEditModalOpen}
+        response={editingResponse}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleUpdateResponse}
       />
       {survey ? (
         <Paper sx={{ p: 4, mt: 4 }}>
@@ -106,8 +154,20 @@ const SurveyDetail = () => {
           
           <Divider sx={{ my: 4 }} />
 
-          {user && (
+          {user && !survey.closed && !userHasResponded && (
             <ResponseForm surveyId={survey._id} onResponseSubmit={handleNewResponse} />
+          )}
+
+          {user && userHasResponded && (
+             <Alert severity="info" sx={{ my: 2 }}>
+                You have already submitted a response for this survey. You can edit your existing response if needed.
+            </Alert>
+          )}
+
+          {survey.closed && (
+            <Alert severity="warning" sx={{ my: 2 }}>
+              This survey is closed and no longer accepting responses.
+            </Alert>
           )}
 
           {user && survey && user.id === survey.creator._id && (
@@ -115,11 +175,13 @@ const SurveyDetail = () => {
               responses={survey.responses || []}
               onEdit={handleEditResponse}
               onDelete={handleDeleteResponse}
+              currentUserId={user?.id}
+              creatorId={survey.creator._id}
             />
           )}
 
-          {(survey.isSummaryPublic || (user && user.id === survey.creator._id)) && (
-            <SurveySummary survey={survey} onSummaryUpdate={handleSummaryUpdate} />
+          {(survey.summary?.isVisible || (user && user.id === survey.creator._id)) && (
+            <SurveySummary survey={survey} onSummaryUpdate={handleSummaryUpdate} currentUserId={user?.id} />
           )}
 
           {user && user.id === survey.creator._id && (

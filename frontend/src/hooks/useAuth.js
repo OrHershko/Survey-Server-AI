@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       const storedToken = localStorage.getItem('authToken');
       const userData = authService.getCurrentUser();
       
@@ -21,7 +21,11 @@ export const AuthProvider = ({ children }) => {
         // Clear invalid state
         setToken(null);
         setUser(null);
-        authService.logout();
+        try {
+          await authService.logout();
+        } catch (error) {
+          console.error('Logout during initialization failed:', error);
+        }
       }
       setIsLoading(false);
     };
@@ -65,11 +69,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setToken(null);
-    setUser(null);
-    setError(null);
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setToken(null);
+      setUser(null);
+      setError(null);
+    }
   };
 
   const clearError = () => {

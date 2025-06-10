@@ -52,13 +52,38 @@ api.interceptors.response.use(
   async (error) => {
     const config = error.config;
     
-    // Handle authentication errors
-    if (error.response?.status === 401) {
+    // Handle authentication errors with automatic token refresh
+    if (error.response?.status === 401 && !config._retry) {
+      config._retry = true;
+      
+      try {
+        // Try to refresh token
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          const refreshResponse = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
+            refreshToken
+          });
+          
+          if (refreshResponse.data.accessToken) {
+            // Update stored token
+            localStorage.setItem('authToken', refreshResponse.data.accessToken);
+            
+            // Retry original request with new token
+            config.headers.Authorization = `Bearer ${refreshResponse.data.accessToken}`;
+            return api(config);
+          }
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+      }
+      
+      // If refresh fails, clear tokens and redirect to login
       localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('userData');
       
-      // Don't redirect if already on login page
-      if (window.location.pathname !== '/login') {
+      // Don't redirect if already on login/register pages
+      if (!['/login', '/register'].includes(window.location.pathname)) {
         window.location.href = '/login';
       }
       return Promise.reject(error);

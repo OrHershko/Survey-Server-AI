@@ -33,9 +33,12 @@ export const authService = {
     try {
       const response = await api.post('/auth/login', credentials);
       
-      // Store token and user data in localStorage
+      // Store tokens and user data in localStorage
       if (response.data.accessToken) {
         localStorage.setItem('authToken', response.data.accessToken);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
         if (response.data.user) {
           localStorage.setItem('userData', JSON.stringify(response.data.user));
         }
@@ -51,10 +54,49 @@ export const authService = {
   },
 
   /**
+   * Refresh access token using refresh token
+   * @returns {Promise<string|null>} New access token or null if refresh failed
+   */
+  async refreshToken() {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        return null;
+      }
+
+      const response = await api.post('/auth/refresh', { refreshToken });
+      
+      if (response.data.accessToken) {
+        localStorage.setItem('authToken', response.data.accessToken);
+        return response.data.accessToken;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      // If refresh fails, clear all tokens and redirect to login
+      this.logout();
+      return null;
+    }
+  },
+
+  /**
    * Logout user and clear stored data
    */
-  logout() {
+  async logout() {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        // Invalidate refresh token on server
+        await api.post('/auth/logout', { refreshToken });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Continue with local cleanup even if server logout fails
+    }
+    
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userData');
     // The api interceptor will handle removing the Authorization header
   },
@@ -74,6 +116,14 @@ export const authService = {
    */
   getToken() {
     return localStorage.getItem('authToken');
+  },
+
+  /**
+   * Get current refresh token
+   * @returns {string|null} Refresh token or null if not available
+   */
+  getRefreshToken() {
+    return localStorage.getItem('refreshToken');
   },
 
   /**

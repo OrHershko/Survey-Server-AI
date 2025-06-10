@@ -23,7 +23,9 @@ const ResponseValidation = ({ surveyId }) => {
     setValidationResults(null);
     try {
       const response = await aiService.validateSurveyResponses(surveyId);
-      setValidationResults(response);
+      if (response.validationResults) {
+        setValidationResults(response.validationResults);
+      }
     } catch (err) {
       setError('Failed to validate responses.');
       console.error(err);
@@ -54,14 +56,14 @@ const ResponseValidation = ({ surveyId }) => {
 
         {validationResults && (
           <Box sx={{ mt: 3 }}>
-            {validationResults.problematicResponses.length > 0 ? (
+            {validationResults.problematicResponses && validationResults.problematicResponses.length > 0 ? (
               <>
                 <Typography variant="h6">Validation Issues Found:</Typography>
                 <List>
-                  {validationResults.problematicResponses.map((item) => (
-                    <ListItem key={item.responseId} divider>
+                  {validationResults.problematicResponses.map((item, index) => (
+                    <ListItem key={item.responseIndex || index} divider>
                       <ListItemText
-                        primary={`Response: "${item.text}"`}
+                        primary={`Response ${item.responseIndex + 1}`}
                         secondary={`Reason: ${item.reason}`}
                       />
                     </ListItem>

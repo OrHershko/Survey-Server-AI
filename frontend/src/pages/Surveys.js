@@ -16,12 +16,13 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useSurveys, useAI } from '../hooks';
+import { useSurveys, useAI, useAuth } from '../hooks';
 import SurveyCard from '../components/surveys/SurveyCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToastNotification from '../components/common/ToastNotification';
 const Surveys = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const {
     surveys,
     loading,
@@ -101,8 +102,14 @@ const Surveys = () => {
   }
 
   const displaySurveys = isSearchMode ? 
-    searchResults.map(result => result.survey || result) : 
-    surveys;
+    searchResults
+      .filter(result => result.id) // Filter results that have an id
+      .map(result => {
+        const survey = surveys.find(survey => survey._id === result.id);
+        return survey ? { ...survey, aiReason: result.reason } : null;
+      })
+      .filter(survey => survey) // Remove any undefined results
+    : surveys;
 
   return (
     <Container maxWidth="lg">
@@ -205,7 +212,7 @@ const Surveys = () => {
           {displaySurveys.length > 0 ? (
             displaySurveys.map((survey) => (
               <Grid item key={survey._id} xs={12} sm={6} md={4}>
-                <SurveyCard survey={survey} showAddResponse={true} />
+                <SurveyCard survey={survey} showAddResponse={true} currentUserId={user?.id} />
               </Grid>
             ))
           ) : (

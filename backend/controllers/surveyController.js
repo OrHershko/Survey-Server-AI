@@ -85,7 +85,7 @@ const getSurveys = async (req, res, next) => {
     };
 
     // Select only basic information for listing
-    const selectFields = 'title area question creator expiryDate closed createdAt responses'; // Added responses for count
+    const selectFields = 'title area question creator expiryDate closed createdAt responses summary'; // Added responses for count and summary for dashboard stats
 
     const surveys = await SurveyService.find(query, options, selectFields, { path: 'creator', select: 'username' });
     const totalSurveys = await SurveyService.count(query);
@@ -129,10 +129,16 @@ const getSurveyById = async (req, res, next) => {
     // This is a soft check; the route is public, but data visibility changes if logged in.
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       const token = req.headers.authorization.split(' ')[1];
+      logger.info(`Attempting JWT verification for survey ${surveyId}, token present: ${!!token}`);
       const decoded = require('../utils/jwtUtils').verifyToken(token);
       if (decoded && decoded.id) {
         userId = decoded.id;
+        logger.info(`JWT verification successful, userId: ${userId}`);
+      } else {
+        logger.warn(`JWT verification failed or no user ID in token for survey ${surveyId}`);
       }
+    } else {
+      logger.info(`No authorization header found for survey ${surveyId}`);
     }
 
     // Populate creator details and response user details
@@ -150,7 +156,13 @@ const getSurveyById = async (req, res, next) => {
 
     let surveyData = survey.toObject(); // Convert to plain object to modify
 
-    const isCreator = userId && survey.creator._id.toString() === userId;
+    const isCreator = userId && survey.creator._id.toString() === userId.toString();
+    logger.info(`Creator detection for survey ${surveyId}: userId=${userId}, creatorId=${survey.creator._id.toString()}, isCreator=${isCreator}`);
+    
+    // Add responseCount BEFORE potentially deleting responses
+    surveyData.responseCount = survey.responses ? survey.responses.length : 0;
+    logger.info(`Survey ${surveyId} responseCount: ${surveyData.responseCount}`);
+    
     // TODO: Implement logic for 'contributor' if that's a defined role or concept
     // For now, only creator can see all responses directly.
     // Others will see responses based on a different logic (e.g. if they have responded themselves, or if responses are public)
@@ -158,20 +170,26 @@ const getSurveyById = async (req, res, next) => {
 
     // By default, do not include responses array unless user is creator or survey responses are public (not implemented yet)
     if (!isCreator) {
+        // Check if the current user has responded to this survey
+        const userHasResponded = userId ? survey.responses.some(r => r.user.toString() === userId) : false;
+        surveyData.userHasResponded = userHasResponded;
+        
         // If not creator, don't send the full responses array by default.
         // Individual responses might be viewable under different conditions later (e.g. if user submitted one)
         delete surveyData.responses; 
     }
 
     // Respect summary visibility settings
-    if (!surveyData.summary || !surveyData.summary.isVisible) {
-      if (!isCreator) { // Creator can always see their own summary, even if not visible to public
-        delete surveyData.summary;
-      }
+    if (!isCreator && surveyData.summary && !surveyData.summary.isVisible) {
+      // Only hide summary from non-creators if it's not visible
+      // Creator can always see their own summary, even if not visible to public
+      logger.info(`Hiding summary from non-creator for survey ${surveyId}: isVisible=${surveyData.summary.isVisible}`);
+      delete surveyData.summary;
+    } else if (surveyData.summary) {
+      logger.info(`Summary visible for survey ${surveyId}: isCreator=${isCreator}, isVisible=${surveyData.summary.isVisible}`);
+    } else {
+      logger.info(`No summary exists for survey ${surveyId}`);
     }
-    
-    // Add responseCount
-    surveyData.responseCount = survey.responses ? survey.responses.length : 0;
 
     logger.info(`Retrieved survey by ID: ${surveyId}`);
     res.status(200).json(surveyData);

@@ -63,7 +63,7 @@ const Header = () => {
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
       <Typography variant="h6" sx={{ my: 2 }}>
-        Survey Server
+        Survey Server AI
       </Typography>
       <List>
         {user && (
@@ -125,7 +125,7 @@ const Header = () => {
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             <Link component={RouterLink} to="/" color="inherit" underline="none">
-              Survey Server
+              Survey Server AI
             </Link>
           </Typography>
           

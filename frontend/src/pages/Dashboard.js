@@ -61,7 +61,7 @@ const Dashboard = () => {
   // Fetch user's surveys on mount
   useEffect(() => {
     if (user?.id) {
-      console.log('Dashboard fetching surveys for user:', user.id);
+
       fetchSurveys({ creator: user.id }).catch(err => {
         console.error('Failed to fetch user surveys:', err);
       });

@@ -88,15 +88,7 @@ const SurveyDetail = () => {
     const fetchSurvey = async () => {
       try {
         const survey = await surveyService.getSurveyById(id);
-        console.log('Survey data received:', {
-          id: survey._id,
-          title: survey.title,
-          creator: survey.creator._id,
-          currentUser: user?.id,
-          hasSummary: !!survey.summary,
-          summaryVisible: survey.summary?.isVisible,
-          summaryText: survey.summary?.text ? 'Present' : 'Not present'
-        });
+
         setSurvey(survey);
       } catch (err) {
         setError('Failed to fetch survey details.');

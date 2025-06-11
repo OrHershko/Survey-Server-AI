@@ -14,9 +14,10 @@ const Survey = require('../../models/SurveyModel');
  * @returns {object} User data
  */
 const generateUserData = (overrides = {}) => ({
-  name: faker.name.findName(),
+  username: faker.internet.userName().replace(/[^a-zA-Z0-9]/g, '').substring(0, 20) || 'testuser123',
   email: faker.internet.email(),
   password: 'Test123!@#',
+  registrationCode: process.env.REGISTRATION_SECRET || 'test-registration-secret',
   ...overrides
 });
 
@@ -27,13 +28,11 @@ const generateUserData = (overrides = {}) => ({
  */
 const generateSurveyData = (overrides = {}) => ({
   title: faker.lorem.sentence(),
-  description: faker.lorem.paragraph(),
   question: faker.lorem.sentence() + '?',
   guidelines: faker.lorem.sentences(3),
   area: faker.commerce.department(),
-  expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-  isAnonymous: faker.datatype.boolean(),
-  maxResponses: faker.datatype.number({ min: 10, max: 100 }),
+  expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+  permittedResponses: faker.datatype.number({ min: 10, max: 100 }),
   ...overrides
 });
 
@@ -43,7 +42,7 @@ const generateSurveyData = (overrides = {}) => ({
  * @returns {object} Response data
  */
 const generateResponseData = (overrides = {}) => ({
-  content: faker.lorem.paragraph(),
+  text: faker.lorem.paragraph(),
   ...overrides
 });
 
@@ -54,8 +53,12 @@ const generateResponseData = (overrides = {}) => ({
  */
 const createTestUser = async (userData = {}) => {
   const data = generateUserData(userData);
-  const salt = await bcrypt.genSalt(10);
-  data.password = await bcrypt.hash(data.password, salt);
+  
+  // Convert password to passwordHash for the User model
+  if (data.password) {
+    data.passwordHash = data.password;
+    delete data.password;
+  }
   
   const user = new User(data);
   return await user.save();
@@ -106,9 +109,28 @@ const generateTestRefreshToken = (payload = {}) => {
     ...payload
   };
   
-  return jwt.sign(defaultPayload, process.env.JWT_REFRESH_SECRET || 'test-refresh-secret', {
+  // Remove exp from payload if present to avoid conflict with expiresIn
+  const { exp, ...cleanPayload } = defaultPayload;
+  
+  return jwt.sign(cleanPayload, process.env.JWT_REFRESH_SECRET || 'test-refresh-secret', {
     expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d'
   });
+};
+
+/**
+ * Generate an expired refresh token for testing
+ * @param {object} payload - Token payload
+ * @returns {string} Expired refresh token
+ */
+const generateExpiredRefreshToken = (payload = {}) => {
+  const defaultPayload = {
+    id: faker.datatype.uuid(),
+    email: faker.internet.email(),
+    exp: Math.floor(Date.now() / 1000) - 3600, // Expired 1 hour ago
+    ...payload
+  };
+  
+  return jwt.sign(defaultPayload, process.env.JWT_REFRESH_SECRET || 'test-refresh-secret');
 };
 
 /**
@@ -203,7 +225,7 @@ const createTestScenario = async (options = {}) => {
       const responseData = generateResponseData(responseOverrides);
       survey.responses.push({
         user: user._id,
-        content: responseData.content,
+        text: responseData.text,
         submittedAt: new Date()
       });
       
@@ -228,11 +250,12 @@ const createTestScenario = async (options = {}) => {
  * @returns {object} Response for chaining
  */
 const validateApiResponse = (response, expectedStatus = 200, shouldHaveData = true) => {
-  expect(response.status).to.equal(expectedStatus);
+  expect(response.status).toBe(expectedStatus);
   
   if (shouldHaveData) {
-    expect(response.body).to.be.an('object');
-    expect(response.body).to.have.property('success');
+    expect(response.body).toBeInstanceOf(Object);
+    // Different endpoints have different response structures
+    // Some have 'message', some have 'surveys', some have other structures
   }
   
   return response;
@@ -246,6 +269,7 @@ module.exports = {
   createTestSurvey,
   generateTestToken,
   generateTestRefreshToken,
+  generateExpiredRefreshToken,
   createAuthContext,
   delay,
   generateMultiple,

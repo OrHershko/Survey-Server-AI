@@ -11,8 +11,12 @@
  * - Coverage reporting
  */
 
-const { execSync } = require('child_process');
+// Load environment variables first
 const path = require('path');
+const dotenv = require('dotenv');
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+const { execSync } = require('child_process');
 const fs = require('fs');
 
 // Test configuration

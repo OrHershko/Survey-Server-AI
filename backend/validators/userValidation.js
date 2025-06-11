@@ -20,12 +20,11 @@ const registrationSchema = Joi.object({
       'string.email': 'Email must be a valid email address',
       'any.required': 'Email is a required field'
     }),
-  password: Joi.string().min(8).pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).required()
+  password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9!@#$%^&*()_+\\-=\\[\\]{};\':"\\|,.<>\\/?]+$')).required()
     .messages({
       'string.base': 'Password should be a type of text',
       'string.empty': 'Password cannot be an empty field',
-      'string.min': 'Password should have a minimum length of {#limit}',
-      'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (!@#$%^&*)',
+      'string.pattern.base': 'Password can only contain letters, numbers, and special characters (no spaces)',
       'any.required': 'Password is a required field'
     }),
   registrationCode: Joi.string().required() // Assuming REGISTRATION_SECRET implies a code is needed

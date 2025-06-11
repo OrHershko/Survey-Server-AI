@@ -56,8 +56,8 @@ describe('Authentication Middleware Tests', () => {
       expect(req.user).toBeDefined();
       expect(req.user._id.toString()).toEqual(testUser._id.toString());
       expect(req.user.email).toEqual(testUser.email);
-      expect(req.user).to.not.have.property('password');
-      expect(req.user).to.not.have.property('passwordHash');
+      expect(req.user).not.toHaveProperty('password');
+      expect(req.user).not.toHaveProperty('passwordHash');
       expect(next).toHaveBeenCalledWith();
       expect(res.status).not.toHaveBeenCalled();
     });
@@ -223,12 +223,12 @@ describe('Authentication Middleware Tests', () => {
       await protect(req, res, next);
 
       expect(req.user).toBeDefined();
-      expect(req.user).to.not.have.property('password');
-      expect(req.user).to.not.have.property('passwordHash');
-      expect(req.user).to.not.have.property('__v');
-      expect(req.user).to.have.property('_id');
-      expect(req.user).to.have.property('email');
-      expect(req.user).to.have.property('name');
+      expect(req.user).not.toHaveProperty('password');
+      expect(req.user).not.toHaveProperty('passwordHash');
+      expect(req.user).not.toHaveProperty('__v');
+      expect(req.user).toHaveProperty('_id');
+      expect(req.user).toHaveProperty('email');
+      expect(req.user).toHaveProperty('name');
     });
 
     it('should handle concurrent authentication requests', async () => {

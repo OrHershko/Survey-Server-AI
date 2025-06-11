@@ -120,13 +120,8 @@ const generateSummary = async (textToSummarize, guidelines, surveyQuestion, surv
     throw new Error('Mock error during summary generation');
   }
   
-  return {
-    summary: 'Mock AI-generated summary of the survey responses.',
-    keyThemes: ['Positive feedback', 'Areas for improvement', 'Suggestions'],
-    sentiment: 'neutral',
-    responseCount: textToSummarize.split('\n').filter(line => line.trim()).length,
-    confidence: 0.85
-  };
+  // Return a string as expected by the AI controller
+  return 'Mock AI-generated summary of the survey responses. Key themes include positive feedback, areas for improvement, and suggestions.';
 };
 
 const searchSurveys = async (query, surveysContextArray) => {
@@ -137,7 +132,7 @@ const searchSurveys = async (query, surveysContextArray) => {
   }
   
   return surveysContextArray.slice(0, 3).map((survey, index) => ({
-    surveyId: survey.id || survey._id || `mock-id-${index}`,
+    surveyId: survey._id || survey.id || `507f1f77bcf86cd799439011`,
     relevanceScore: 0.9 - (index * 0.1),
     reason: `Mock relevance match for query: ${query}`
   }));

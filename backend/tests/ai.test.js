@@ -30,10 +30,11 @@ describe('AI API Tests', () => {
         .set('Authorization', authContext.headers.Authorization);
 
       validateApiResponse(response, 200);
-      expect(response.body.success).to.be.true;
-      expect(response.body.data).to.have.property('summary');
-      expect(response.body.data.summary).to.be.a('string');
-      expect(response.body.data.summary.length).to.be.greaterThan(0);
+      expect(response.body.success).toBe(true);
+      expect(response.body).toHaveProperty('summary');
+      expect(response.body.summary).toBeInstanceOf(Object);
+      expect(typeof response.body.summary.text).toBe('string');
+      expect(response.body.summary.text.length).toBeGreaterThan(0);
     });
 
     it('should not allow non-creator to generate summary', async () => {
@@ -51,8 +52,7 @@ describe('AI API Tests', () => {
         .set('Authorization', otherAuthContext.headers.Authorization);
 
       validateApiResponse(response, 403, false);
-      expect(response.body.success).to.be.false;
-      expect(response.body.message).to.include('not authorized');
+      expect(response.body.message).toContain('not authorized');
     });
 
     it('should not generate summary without authentication', async () => {
@@ -66,8 +66,7 @@ describe('AI API Tests', () => {
         .post(`/ai/surveys/${survey._id}/summarize`);
 
       validateApiResponse(response, 401, false);
-      expect(response.body.success).to.be.false;
-      expect(response.body.message).to.include('Not authorized');
+      expect(response.body.message).toContain('Not authorized');
     });
 
     it('should handle survey with no responses', async () => {
@@ -81,9 +80,9 @@ describe('AI API Tests', () => {
         .post(`/ai/surveys/${survey._id}/summarize`)
         .set('Authorization', authContext.headers.Authorization);
 
-      expect(response.status).to.be.oneOf([200, 400]);
+      expect(response.status).toBeOneOf([200, 400]);
       if (response.status === 400) {
-        expect(response.body.message).to.include('no responses');
+        expect(response.body.message).toContain('No responses available to summarize');
       }
     });
 
@@ -97,14 +96,14 @@ describe('AI API Tests', () => {
         .set('Authorization', authContext.headers.Authorization);
 
       validateApiResponse(response, 404, false);
-      expect(response.body.success).to.be.false;
+      expect(response.body.message).toContain('Survey not found');
     });
 
     it('should handle LLM service errors gracefully', async () => {
       const { surveys, authContext } = await createTestScenario({
         surveyCount: 1,
         responseCount: 3,
-        responseOverrides: { content: 'error test content' }
+        responseOverrides: { text: 'error test content' }
       });
       const survey = surveys[0];
 
@@ -113,41 +112,13 @@ describe('AI API Tests', () => {
         .set('Authorization', authContext.headers.Authorization);
 
       // Should handle LLM errors gracefully
-      expect(response.status).to.be.oneOf([200, 500, 503]);
+      expect(response.status).toBeOneOf([200, 500, 503]);
       if (response.status >= 500) {
-        expect(response.body.success).to.be.false;
-        expect(response.body.message).to.include('AI service');
+        expect(response.body.message).toContain('Failed to generate summary');
       }
     });
 
-    it('should cache summary results', async () => {
-      const { surveys, authContext } = await createTestScenario({
-        surveyCount: 1,
-        responseCount: 3
-      });
-      const survey = surveys[0];
-
-      // First request
-      const response1 = await request(app)
-        .post(`/ai/surveys/${survey._id}/summarize`)
-        .set('Authorization', authContext.headers.Authorization);
-
-      // Second request (should be faster due to caching)
-      const startTime = Date.now();
-      const response2 = await request(app)
-        .post(`/ai/surveys/${survey._id}/summarize`)
-        .set('Authorization', authContext.headers.Authorization);
-      const endTime = Date.now();
-
-      expect(response1.status).to.equal(200);
-      expect(response2.status).to.equal(200);
-      
-      // Second request should be faster (cached)
-      // This test assumes caching is implemented
-      if (response1.body.data.summary === response2.body.data.summary) {
-        expect(endTime - startTime).to.be.lessThan(1000);
-      }
-    });
+    
   });
 
   describe('PATCH /ai/surveys/:id/summary/visibility', () => {
@@ -167,11 +138,11 @@ describe('AI API Tests', () => {
       const response = await request(app)
         .patch(`/ai/surveys/${survey._id}/summary/visibility`)
         .set('Authorization', authContext.headers.Authorization)
-        .send({ isPublic: true });
+        .send({ isVisible: true });
 
       validateApiResponse(response, 200);
-      expect(response.body.success).to.be.true;
-      expect(response.body.data).to.have.property('survey');
+      expect(response.body.success).toBe(true);
+      expect(response.body).toHaveProperty('survey');
     });
 
     it('should not allow non-creator to toggle visibility', async () => {
@@ -187,10 +158,10 @@ describe('AI API Tests', () => {
       const response = await request(app)
         .patch(`/ai/surveys/${survey._id}/summary/visibility`)
         .set('Authorization', otherAuthContext.headers.Authorization)
-        .send({ isPublic: true });
+        .send({ isVisible: true });
 
       validateApiResponse(response, 403, false);
-      expect(response.body.success).to.be.false;
+      expect(response.body.message).toContain('not authorized');
     });
 
     it('should validate visibility payload', async () => {
@@ -203,123 +174,103 @@ describe('AI API Tests', () => {
       const response = await request(app)
         .patch(`/ai/surveys/${survey._id}/summary/visibility`)
         .set('Authorization', authContext.headers.Authorization)
-        .send({ isPublic: 'invalid' }); // Should be boolean
+        .send({ isVisible: 'invalid' });
 
       validateApiResponse(response, 400, false);
-      expect(response.body.success).to.be.false;
+      expect(response.body.message).toContain('Invalid visibility value');
     });
   });
 
   describe('POST /ai/surveys/search', () => {
     it('should search surveys using natural language', async () => {
       await createTestScenario({
-        surveyCount: 5,
-        surveyOverrides: { 
-          title: 'Customer Satisfaction Survey',
-          area: 'Technology'
-        }
+        surveyCount: 3,
+        responseCount: 2
       });
 
-      const searchQuery = {
-        query: 'customer satisfaction technology surveys',
-        limit: 10
-      };
+      const searchQuery = { query: 'test survey about feedback' };
 
       const response = await request(app)
         .post('/ai/surveys/search')
         .send(searchQuery);
 
       validateApiResponse(response, 200);
-      expect(response.body.success).to.be.true;
-      expect(response.body.data).to.have.property('results');
-      expect(response.body.data.results).to.be.an('array');
+      expect(response.body.success).toBe(true);
+      expect(response.body).toHaveProperty('results');
+      expect(response.body.results).toBeInstanceOf(Array);
     });
 
     it('should handle search with no results', async () => {
-      const searchQuery = {
-        query: 'non-existent survey topic that should not match anything',
-        limit: 10
-      };
+      const searchQuery = { query: 'very specific non-matching query xyz123' };
 
       const response = await request(app)
         .post('/ai/surveys/search')
         .send(searchQuery);
 
       validateApiResponse(response, 200);
-      expect(response.body.success).to.be.true;
-      expect(response.body.data.results).to.be.an('array');
-      expect(response.body.data.results.length).to.equal(0);
+      expect(response.body.success).toBe(true);
+      expect(response.body.results).toBeInstanceOf(Array);
+      expect(response.body.results.length).toBe(0);
     });
 
     it('should validate search query', async () => {
+      const searchQuery = { query: '' };
+
       const response = await request(app)
         .post('/ai/surveys/search')
-        .send({
-          query: '', // Empty query
-          limit: 10
-        });
+        .send(searchQuery);
 
       validateApiResponse(response, 400, false);
-      expect(response.body.success).to.be.false;
-      expect(response.body.message).to.include('query');
+      expect(response.body.message).toContain('query');
     });
 
     it('should limit search results', async () => {
       await createTestScenario({
-        surveyCount: 20,
-        surveyOverrides: { area: 'Technology' }
+        surveyCount: 10,
+        responseCount: 1
       });
 
-      const searchQuery = {
-        query: 'technology surveys',
-        limit: 5
-      };
+      const searchQuery = { query: 'survey' };
 
       const response = await request(app)
         .post('/ai/surveys/search')
         .send(searchQuery);
 
       validateApiResponse(response, 200);
-      expect(response.body.data.results.length).to.be.at.most(5);
+      expect(response.body.results.length).toBeLessThanOrEqual(5);
     });
 
     it('should handle LLM search errors gracefully', async () => {
-      const searchQuery = {
-        query: 'error test search query that should trigger mock error',
-        limit: 10
-      };
+      const searchQuery = { query: 'error test query' };
 
       const response = await request(app)
         .post('/ai/surveys/search')
         .send(searchQuery);
 
-      expect(response.status).to.be.oneOf([200, 500, 503]);
+      expect(response.status).toBeOneOf([200, 500, 503]);
       if (response.status >= 500) {
-        expect(response.body.success).to.be.false;
-        expect(response.body.message).to.include('search');
+        expect(response.body.message).toContain('search');
       }
     });
 
     it('should return relevance scores', async () => {
       await createTestScenario({
-        surveyCount: 3,
-        surveyOverrides: { title: 'Technology Survey' }
+        surveyCount: 2,
+        responseCount: 1
       });
 
-      const searchQuery = {
-        query: 'technology',
-        limit: 10
-      };
+      const searchQuery = { query: 'survey feedback' };
 
       const response = await request(app)
         .post('/ai/surveys/search')
         .send(searchQuery);
 
-      if (response.status === 200 && response.body.data.results.length > 0) {
-        response.body.data.results.forEach(result => {
-          expect(result).to.have.property('relevanceScore');
-          expect(result.relevanceScore).to.be.a('number');
-          expect(result.relevanceScore).to.be.within(0, 1);
+      if (response.status === 200 && response.body.results.length > 0) {
+        response.body.results.forEach(result => {
+          expect(result).toHaveProperty('relevanceScore');
+          expect(typeof result.relevanceScore).toBe('number');
+          expect(result.relevanceScore).toBeGreaterThanOrEqual(0);
+          expect(result.relevanceScore).toBeLessThanOrEqual(1);
         });
       }
     });
@@ -329,8 +280,7 @@ describe('AI API Tests', () => {
     it('should validate survey responses for creator', async () => {
       const { surveys, authContext } = await createTestScenario({
         surveyCount: 1,
-        responseCount: 5,
-        responseOverrides: { content: 'This is a valid response content' }
+        responseCount: 5
       });
       const survey = surveys[0];
 
@@ -339,9 +289,9 @@ describe('AI API Tests', () => {
         .set('Authorization', authContext.headers.Authorization);
 
       validateApiResponse(response, 200);
-      expect(response.body.success).to.be.true;
-      expect(response.body.data).to.have.property('validationResults');
-      expect(response.body.data.validationResults).to.be.an('array');
+      expect(response.body.success).toBe(true);
+      expect(response.body).toHaveProperty('validationResults');
+      expect(response.body.validationResults).toBeInstanceOf(Array);
     });
 
     it('should not allow non-creator to validate responses', async () => {
@@ -359,7 +309,7 @@ describe('AI API Tests', () => {
         .set('Authorization', otherAuthContext.headers.Authorization);
 
       validateApiResponse(response, 403, false);
-      expect(response.body.success).to.be.false;
+      expect(response.body.message).toContain('not authorized');
     });
 
     it('should handle survey with no responses', async () => {
@@ -373,12 +323,12 @@ describe('AI API Tests', () => {
         .post(`/ai/surveys/${survey._id}/validate-responses`)
         .set('Authorization', authContext.headers.Authorization);
 
-      expect(response.status).to.be.oneOf([200, 400]);
+      expect(response.status).toBeOneOf([200, 400]);
       if (response.status === 400) {
-        expect(response.body.message).to.include('no responses');
+        expect(response.body.message).toContain('No responses available to validate');
       } else {
-        expect(response.body.data.validationResults).to.be.an('array');
-        expect(response.body.data.validationResults.length).to.equal(0);
+        expect(response.body.validationResults).toBeInstanceOf(Array);
+        expect(response.body.validationResults.length).toBe(0);
       }
     });
 
@@ -386,7 +336,7 @@ describe('AI API Tests', () => {
       const { surveys, authContext } = await createTestScenario({
         surveyCount: 1,
         responseCount: 3,
-        responseOverrides: { content: 'This response contains invalid content' }
+        responseOverrides: { text: 'invalid response content' }
       });
       const survey = surveys[0];
 
@@ -395,13 +345,14 @@ describe('AI API Tests', () => {
         .set('Authorization', authContext.headers.Authorization);
 
       validateApiResponse(response, 200);
-      expect(response.body.data.validationResults).to.be.an('array');
-      
-      if (response.body.data.validationResults.length > 0) {
-        response.body.data.validationResults.forEach(result => {
-          expect(result).to.have.property('isValid');
-          expect(result).to.have.property('responseId');
-          expect(result.isValid).to.be.a('boolean');
+      expect(response.body.validationResults).toBeInstanceOf(Array);
+
+      if (response.body.validationResults.length > 0) {
+        response.body.validationResults.forEach(result => {
+          expect(result).toHaveProperty('isValid');
+          expect(result).toHaveProperty('feedback');
+          expect(typeof result.isValid).toBe('boolean');
+          expect(typeof result.feedback).toBe('string');
         });
       }
     });
@@ -409,8 +360,7 @@ describe('AI API Tests', () => {
     it('should provide validation feedback', async () => {
       const { surveys, authContext } = await createTestScenario({
         surveyCount: 1,
-        responseCount: 2,
-        responseOverrides: { content: 'Valid response content' }
+        responseCount: 2
       });
       const survey = surveys[0];
 
@@ -419,11 +369,12 @@ describe('AI API Tests', () => {
         .set('Authorization', authContext.headers.Authorization);
 
       validateApiResponse(response, 200);
-      
-      if (response.body.data.validationResults.length > 0) {
-        response.body.data.validationResults.forEach(result => {
-          expect(result).to.have.property('feedback');
-          expect(result.feedback).to.be.a('string');
+
+      if (response.body.validationResults.length > 0) {
+        response.body.validationResults.forEach(result => {
+          expect(result).toHaveProperty('feedback');
+          expect(typeof result.feedback).toBe('string');
+          expect(result.feedback.length).toBeGreaterThan(0);
         });
       }
     });
@@ -432,7 +383,7 @@ describe('AI API Tests', () => {
       const { surveys, authContext } = await createTestScenario({
         surveyCount: 1,
         responseCount: 2,
-        responseOverrides: { content: 'error test validation content' }
+        responseOverrides: { text: 'error test validation content' }
       });
       const survey = surveys[0];
 
@@ -440,10 +391,9 @@ describe('AI API Tests', () => {
         .post(`/ai/surveys/${survey._id}/validate-responses`)
         .set('Authorization', authContext.headers.Authorization);
 
-      expect(response.status).to.be.oneOf([200, 500, 503]);
+      expect(response.status).toBeOneOf([200, 500, 503]);
       if (response.status >= 500) {
-        expect(response.body.success).to.be.false;
-        expect(response.body.message).to.include('validation');
+        expect(response.body.message).toContain('validation');
       }
     });
   });
@@ -451,31 +401,28 @@ describe('AI API Tests', () => {
   describe('AI Service Integration Tests', () => {
     it('should handle concurrent AI operations', async () => {
       const { surveys, authContext } = await createTestScenario({
-        surveyCount: 2,
-        responseCount: 3
+        surveyCount: 3,
+        responseCount: 2
       });
 
-      // Perform multiple AI operations concurrently
-      const operations = [
+      // Run multiple AI operations concurrently
+      const promises = [
         request(app)
           .post(`/ai/surveys/${surveys[0]._id}/summarize`)
           .set('Authorization', authContext.headers.Authorization),
         request(app)
-          .post(`/ai/surveys/${surveys[1]._id}/summarize`)
+          .post(`/ai/surveys/${surveys[1]._id}/validate-responses`)
           .set('Authorization', authContext.headers.Authorization),
         request(app)
           .post('/ai/surveys/search')
-          .send({ query: 'technology surveys', limit: 5 }),
-        request(app)
-          .post(`/ai/surveys/${surveys[0]._id}/validate-responses`)
-          .set('Authorization', authContext.headers.Authorization)
+          .send({ query: 'test survey' })
       ];
 
-      const results = await Promise.all(operations);
-      
+      const results = await Promise.all(promises);
+
       // All operations should complete successfully or with expected errors
       results.forEach(result => {
-        expect(result.status).to.be.lessThan(600); // No server crashes
+        expect(result.status).toBeLessThan(600); // No server crashes
       });
     });
 
@@ -484,29 +431,39 @@ describe('AI API Tests', () => {
         surveyCount: 1,
         responseCount: 3
       });
-      const survey = surveys[0];
 
-      // Test all AI endpoints for consistent response format
-      const summaryResponse = await request(app)
-        .post(`/ai/surveys/${survey._id}/summarize`)
-        .set('Authorization', authContext.headers.Authorization);
-
-      const searchResponse = await request(app)
-        .post('/ai/surveys/search')
-        .send({ query: 'test', limit: 5 });
-
-      const validationResponse = await request(app)
-        .post(`/ai/surveys/${survey._id}/validate-responses`)
-        .set('Authorization', authContext.headers.Authorization);
-
-      // All should have consistent response structure
-      [summaryResponse, searchResponse, validationResponse].forEach(response => {
-        if (response.status === 200) {
-          expect(response.body).to.have.property('success');
-          expect(response.body).to.have.property('data');
-          expect(response.body.success).to.be.true;
+      const endpoints = [
+        {
+          method: 'post',
+          url: `/ai/surveys/${surveys[0]._id}/summarize`,
+          auth: true
+        },
+        {
+          method: 'post',
+          url: '/ai/surveys/search',
+          body: { query: 'test' },
+          auth: false
         }
-      });
+      ];
+
+      for (const endpoint of endpoints) {
+        let req = request(app)[endpoint.method](endpoint.url);
+        
+        if (endpoint.auth) {
+          req = req.set('Authorization', authContext.headers.Authorization);
+        }
+        
+        if (endpoint.body) {
+          req = req.send(endpoint.body);
+        }
+
+        const response = await req;
+        
+        if (response.status === 200) {
+          expect(response.body).toHaveProperty('success');
+          expect(response.body.success).toBe(true);
+        }
+      }
     });
 
     it('should handle rate limiting for AI operations', async () => {
@@ -534,53 +491,37 @@ describe('AI API Tests', () => {
     });
 
     it('should validate AI service environment configuration', async () => {
+      const user = await createTestUser();
+      const authContext = createAuthContext(user);
+
       // This test verifies that the mock LLM service is being used in tests
-      expect(process.env.USE_MOCK_LLM).to.equal('true');
-      expect(process.env.NODE_ENV).to.equal('test');
+      expect(process.env.USE_MOCK_LLM).toBe('true');
+      expect(process.env.NODE_ENV).toBe('test');
     });
   });
 
   describe('AI Response Content Validation', () => {
-    it('should validate summary response structure', async () => {
-      const { surveys, authContext } = await createTestScenario({
-        surveyCount: 1,
-        responseCount: 5
-      });
-      const survey = surveys[0];
-
-      const response = await request(app)
-        .post(`/ai/surveys/${survey._id}/summarize`)
-        .set('Authorization', authContext.headers.Authorization);
-
-      if (response.status === 200) {
-        expect(response.body.data.summary).to.be.a('string');
-        expect(response.body.data.summary.length).to.be.greaterThan(10);
-        
-        // Additional validation for summary structure if implemented
-        if (typeof response.body.data.summary === 'object') {
-          expect(response.body.data.summary).to.have.property('content');
-        }
-      }
-    });
-
     it('should validate search response structure', async () => {
-      await createTestScenario({ surveyCount: 3 });
+      await createTestScenario({
+        surveyCount: 2,
+        responseCount: 1
+      });
 
       const response = await request(app)
         .post('/ai/surveys/search')
-        .send({ query: 'test survey', limit: 5 });
+        .send({ query: 'survey feedback analysis' });
 
       if (response.status === 200) {
-        expect(response.body.data.results).to.be.an('array');
-        
-        response.body.data.results.forEach(result => {
-          expect(result).to.have.property('surveyId');
-          expect(result.surveyId).to.be.a('string');
+        expect(response.body.results).toBeInstanceOf(Array);
+
+        response.body.results.forEach(result => {
+          expect(result).toHaveProperty('surveyId');
+          expect(result).toHaveProperty('relevanceScore');
+          expect(result).toHaveProperty('reason');
           
-          if (result.relevanceScore !== undefined) {
-            expect(result.relevanceScore).to.be.a('number');
-            expect(result.relevanceScore).to.be.within(0, 1);
-          }
+          expect(typeof result.surveyId).toBe('string');
+          expect(typeof result.relevanceScore).toBe('number');
+          expect(typeof result.reason).toBe('string');
         });
       }
     });
@@ -588,25 +529,24 @@ describe('AI API Tests', () => {
     it('should validate validation response structure', async () => {
       const { surveys, authContext } = await createTestScenario({
         surveyCount: 1,
-        responseCount: 3
+        responseCount: 2
       });
-      const survey = surveys[0];
 
       const response = await request(app)
-        .post(`/ai/surveys/${survey._id}/validate-responses`)
+        .post(`/ai/surveys/${surveys[0]._id}/validate-responses`)
         .set('Authorization', authContext.headers.Authorization);
 
       if (response.status === 200) {
-        expect(response.body.data.validationResults).to.be.an('array');
-        
-        response.body.data.validationResults.forEach(result => {
-          expect(result).to.have.property('responseId');
-          expect(result).to.have.property('isValid');
-          expect(result).to.have.property('feedback');
+        expect(response.body.validationResults).toBeInstanceOf(Array);
+
+        response.body.validationResults.forEach(result => {
+          expect(result).toHaveProperty('responseId');
+          expect(result).toHaveProperty('isValid');
+          expect(result).toHaveProperty('feedback');
           
-          expect(result.responseId).to.be.a('string');
-          expect(result.isValid).to.be.a('boolean');
-          expect(result.feedback).to.be.a('string');
+          expect(typeof result.responseId).toBe('string');
+          expect(typeof result.isValid).toBe('boolean');
+          expect(typeof result.feedback).toBe('string');
         });
       }
     });

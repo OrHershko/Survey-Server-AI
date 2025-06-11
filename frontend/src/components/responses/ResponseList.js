@@ -25,7 +25,9 @@ const ResponseList = ({
   onEdit, 
   onDelete, 
   allowOwnerDelete = false,
-  isOwnerView = false 
+  isOwnerView = false,
+  surveyCreatorId,
+  isSurveyClosed = false
 }) => {
   const { user } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -73,7 +75,13 @@ const ResponseList = ({
       ? response.user?._id || response.user?.id
       : response.user;
     
-    return user.id === responseUserId;
+    // Only allow editing if:
+    // 1. User owns the response AND
+    // 2. Survey is not closed (unless user is the survey creator)
+    const isOwner = user.id === responseUserId;
+    const isSurveyCreator = surveyCreatorId && user.id === surveyCreatorId;
+    
+    return isOwner && (!isSurveyClosed || isSurveyCreator);
   };
 
   const canDeleteResponse = (response) => {
@@ -84,8 +92,16 @@ const ResponseList = ({
       ? response.user?._id || response.user?.id
       : response.user;
     
-    // User can delete their own response OR if owner delete is allowed (survey creator view)
-    return user.id === responseUserId || allowOwnerDelete;
+    const isOwner = user.id === responseUserId;
+    const isSurveyCreator = surveyCreatorId && user.id === surveyCreatorId;
+    
+    // Survey creators can always delete any response
+    if (isSurveyCreator) {
+      return true;
+    }
+    
+    // Regular users can only delete their own responses when survey is not closed
+    return isOwner && !isSurveyClosed;
   };
 
   return (

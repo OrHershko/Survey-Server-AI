@@ -78,9 +78,10 @@ class SurveyService extends BaseService {
    * @param {string} responseId - The ID of the response to update.
    * @param {string} userId - The ID of the user attempting the update.
    * @param {string} newText - The new text for the response.
+   * @param {boolean} isCreator - True if the user is the creator of the survey.
    * @returns {Promise<object|null|string>} The updated response object, null if survey/response not found, or a string message if not authorized.
    */
-  async updateSurveyResponse(surveyId, responseId, userId, newText) {
+  async updateSurveyResponse(surveyId, responseId, userId, newText, isCreator = false) {
     try {
       const survey = await this.model.findOne({ _id: surveyId, 'responses._id': responseId });
       if (!survey) {
@@ -95,18 +96,21 @@ class SurveyService extends BaseService {
         return null;
       }
 
-      if (response.user.toString() !== userId.toString()) {
+      const isResponseOwner = response.user.toString() === userId.toString();
+
+      // Authorization: Only response owner can update their response
+      if (!isResponseOwner) {
         logger.warn(`User ${userId} attempted to update response ${responseId} not owned by them.`);
         return 'UNAUTHORIZED';
       }
       
-      // Validate survey is still open (not manually closed and not expired)
-      if (survey.closed) {
-        logger.warn(`Attempt to update response for a closed survey: ${surveyId}`);
+      // Validate survey status - non-creators cannot update responses when survey is closed
+      if (survey.closed && !isCreator) {
+        logger.warn(`Attempt to update response for a closed survey: ${surveyId} by non-creator.`);
         return 'SURVEY_CLOSED';
       }
-      if (survey.expiryDate && new Date(survey.expiryDate) < new Date()) {
-        logger.warn(`Attempt to update response for an expired survey: ${surveyId}`);
+      if (survey.expiryDate && new Date(survey.expiryDate) < new Date() && !isCreator) {
+        logger.warn(`Attempt to update response for an expired survey: ${surveyId} by non-creator.`);
         return 'SURVEY_EXPIRED';
       }
 
@@ -114,7 +118,7 @@ class SurveyService extends BaseService {
       response.updatedAt = new Date();
       await survey.save();
       
-      logger.info(`Response ${responseId} in survey ${surveyId} updated successfully by user ${userId}.`);
+      logger.info(`Response ${responseId} in survey ${surveyId} updated successfully by user ${userId} (isCreator: ${isCreator}).`);
       return response; // Return the updated sub-document
 
     } catch (error) {

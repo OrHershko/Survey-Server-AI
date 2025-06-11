@@ -120,6 +120,21 @@ const MyResponses = () => {
     setEditText('');
   };
 
+  // Check if user can edit/delete a response
+  const canEditOrDeleteResponse = (response) => {
+    if (!response.survey) return false;
+    
+    // Check if survey is closed or expired
+    const isClosed = response.survey.closed;
+    const isExpired = response.survey.expiryDate && new Date(response.survey.expiryDate) < new Date();
+    
+    // Check if user is survey creator
+    const isCreator = user && response.survey.creator && user.id === response.survey.creator;
+    
+    // Allow if survey is not closed/expired, or if user is the survey creator
+    return !(isClosed || isExpired) || isCreator;
+  };
+
   // Show loading while auth is loading
   if (authLoading) {
     return <LoadingSpinner message="Checking authentication..." />;
@@ -171,7 +186,7 @@ const MyResponses = () => {
                           edge="end" 
                           aria-label="edit" 
                           onClick={() => handleEdit(response)}
-                          disabled={editLoading}
+                          disabled={!canEditOrDeleteResponse(response) || editLoading}
                         >
                           <EditIcon />
                         </IconButton>
@@ -179,7 +194,7 @@ const MyResponses = () => {
                           edge="end" 
                           aria-label="delete" 
                           onClick={() => handleDelete(response)}
-                          disabled={deleteLoading === response._id}
+                          disabled={!canEditOrDeleteResponse(response) || deleteLoading === response._id}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -229,6 +244,40 @@ const MyResponses = () => {
                               <span> • Updated on: {new Date(response.updatedAt).toLocaleDateString()}</span>
                             )}
                           </Typography>
+                          <Box sx={{ mt: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
+                            {response.survey.closed && (
+                              <Chip 
+                                label="Survey Closed" 
+                                size="small" 
+                                color="error" 
+                                variant="outlined"
+                              />
+                            )}
+                            {response.survey.expiryDate && new Date(response.survey.expiryDate) < new Date() && (
+                              <Chip 
+                                label="Survey Expired" 
+                                size="small" 
+                                color="warning" 
+                                variant="outlined"
+                              />
+                            )}
+                            {user && response.survey.creator === user.id && (
+                              <Chip 
+                                label="You are the creator" 
+                                size="small" 
+                                color="info" 
+                                variant="outlined"
+                              />
+                            )}
+                            {!canEditOrDeleteResponse(response) && (
+                              <Chip 
+                                label="Cannot edit/delete" 
+                                size="small" 
+                                color="default" 
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
                         </>
                       }
                     />

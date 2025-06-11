@@ -400,8 +400,17 @@ const updateResponse = async (req, res, next) => {
     }
     const { text: newText } = value;
 
-    // 2. Call SurveyService to update the response
-    const result = await SurveyService.updateSurveyResponse(surveyId, responseId, userId, newText);
+    // 2. Check if the current user is the survey creator
+    const survey = await SurveyService.findById(surveyId);
+    if (!survey) {
+      logger.warn(`Survey ${surveyId} not found for response update.`);
+      return res.status(404).json({ message: 'Survey not found.' });
+    }
+
+    const isCreator = survey.creator.toString() === userId.toString();
+
+    // 3. Call SurveyService to update the response
+    const result = await SurveyService.updateSurveyResponse(surveyId, responseId, userId, newText, isCreator);
 
     if (!result) {
       logger.warn(`Survey ${surveyId} or response ${responseId} not found for update by user ${userId}.`);
@@ -593,7 +602,10 @@ const getAllUserResponses = async (req, res, next) => {
               _id: survey._id,
               title: survey.title,
               area: survey.area,
-              question: survey.question
+              question: survey.question,
+              closed: survey.closed,
+              expiryDate: survey.expiryDate,
+              creator: survey.creator._id
             }
           });
         }

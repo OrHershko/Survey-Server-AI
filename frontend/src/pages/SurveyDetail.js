@@ -169,6 +169,10 @@ const SurveyDetail = () => {
               onDelete={handleDeleteResponse}
               currentUserId={user?.id}
               creatorId={survey.creator._id}
+              surveyCreatorId={survey.creator._id}
+              isSurveyClosed={survey.closed}
+              allowOwnerDelete={true}
+              isOwnerView={true}
             />
           )}
 

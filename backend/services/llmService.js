@@ -120,35 +120,44 @@ function extractAndParseJSON(rawResponse) {
 }
 
 /**
- * Calls the OpenRouter API (DeepSeek model) for chat completions.
+ * Mock LLM function for testing purposes.
+ * @param {Array<object>} messages - Array of message objects (e.g., [{ role: 'user', content: 'Hello' }]).
+ * @param {string} model - The specific model to use (defaults to DEFAULT_MODEL).
+ * @param {object} options - Additional options for the API call (e.g., temperature, max_tokens).
+ * @returns {Promise<object>} Mock response data.
+ */
+const getMockChatCompletion = async (messages, model = DEFAULT_MODEL, options = {}) => {
+  logger.info('Using Mock LLM Service for chat completion');
+  // Simulate a delay and return a mock response
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  if (messages.some(m => m.content.toLowerCase().includes('error test'))) {
+    return Promise.reject(new Error('Mock LLM Error'));
+  }
+  
+  return Promise.resolve({
+    choices: [
+      {
+        message: {
+          role: 'assistant',
+          content: 'This is a mock response from the LLM service.',
+        },
+      },
+    ],
+    // Include other mock data as needed, like usage stats
+    usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 }
+  });
+};
+
+/**
+ * Real LLM function that calls the OpenRouter API (DeepSeek model).
  * @param {Array<object>} messages - Array of message objects (e.g., [{ role: 'user', content: 'Hello' }]).
  * @param {string} model - The specific model to use (defaults to DEFAULT_MODEL).
  * @param {object} options - Additional options for the API call (e.g., temperature, max_tokens).
  * @returns {Promise<object>} The response data from the LLM.
  * @throws {Error} If the API call fails or OPENROUTER_API_KEY is not set.
  */
-const getChatCompletion = async (messages, model = DEFAULT_MODEL, options = {}) => {
-  if (useMockLLM) {
-    logger.info('Using Mock LLM Service for chat completion');
-    // Simulate a delay and return a mock response
-    await new Promise(resolve => setTimeout(resolve, 500));
-    if (messages.some(m => m.content.toLowerCase().includes('error test'))) {
-      return Promise.reject(new Error('Mock LLM Error'));
-    }
-    return Promise.resolve({
-      choices: [
-        {
-          message: {
-            role: 'assistant',
-            content: 'This is a mock response from the LLM service.',
-          },
-        },
-      ],
-      // Include other mock data as needed, like usage stats
-      usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 }
-    });
-  }
-
+const getRealChatCompletion = async (messages, model = DEFAULT_MODEL, options = {}) => {
   if (!OPENROUTER_API_KEY) {
     logger.error('OPENROUTER_API_KEY is not set. Cannot call LLM service.');
     throw new Error('OpenRouter API key is not configured.');
@@ -196,6 +205,22 @@ const getChatCompletion = async (messages, model = DEFAULT_MODEL, options = {}) 
   } catch (error) {
     logger.error('Failed to get chat completion from LLM:', error.message);
     throw error; // Re-throw the error to be handled by the caller
+  }
+};
+
+/**
+ * Main chat completion function that decides between mock and real LLM based on USE_MOCK_LLM flag.
+ * @param {Array<object>} messages - Array of message objects (e.g., [{ role: 'user', content: 'Hello' }]).
+ * @param {string} model - The specific model to use (defaults to DEFAULT_MODEL).
+ * @param {object} options - Additional options for the API call (e.g., temperature, max_tokens).
+ * @returns {Promise<object>} The response data from the LLM.
+ * @throws {Error} If the API call fails or OPENROUTER_API_KEY is not set.
+ */
+const getChatCompletion = async (messages, model = DEFAULT_MODEL, options = {}) => {
+  if (useMockLLM) {
+    return getMockChatCompletion(messages, model, options);
+  } else {
+    return getRealChatCompletion(messages, model, options);
   }
 };
 

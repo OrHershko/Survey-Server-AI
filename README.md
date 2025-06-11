@@ -182,9 +182,58 @@ The API documentation will be available at `http://localhost:5000/api-docs` when
 
 ## AI Configuration
 
-### Switching from Mock to Real AI
+### LLM Mode Switching
 
-By default, the system uses mock AI responses for development and testing. To enable real AI functionality:
+The system supports two LLM modes that can be switched via environment configuration:
+
+#### Mock LLM Mode (Default for Development)
+- Returns static mock responses
+- No external API calls
+- Instant responses for development
+- No API key required
+- Ideal for development and testing
+
+#### Real LLM Mode (Production)
+- Calls OpenRouter API with DeepSeek model
+- Requires valid API key and internet connection
+- Real AI-powered responses
+- Consumes API credits
+
+### How to Switch Between Modes
+
+#### Option 1: Environment Variable (Recommended)
+
+**Switch to Mock Mode:**
+```bash
+# In backend/.env
+USE_MOCK_LLM=true
+```
+
+**Switch to Real LLM Mode:**
+```bash
+# In backend/.env
+USE_MOCK_LLM=false
+OPENROUTER_API_KEY=your-actual-api-key-here
+```
+
+#### Option 2: Quick Toggle Commands
+
+**For Development/Testing (Mock Mode):**
+```bash
+cd backend
+echo "USE_MOCK_LLM=true" >> .env
+npm run dev
+```
+
+**For Production Testing (Real LLM):**
+```bash
+cd backend
+echo "USE_MOCK_LLM=false" >> .env
+echo "OPENROUTER_API_KEY=your-api-key" >> .env
+npm run dev
+```
+
+### Setting Up Real AI Functionality
 
 1. **Get OpenRouter API Key**
    - Sign up at [OpenRouter](https://openrouter.ai/)
@@ -192,9 +241,9 @@ By default, the system uses mock AI responses for development and testing. To en
    - Note: The system is configured to use `deepseek/deepseek-chat-v3-0324:free`
 
 2. **Configure Environment Variables**
-   Create a `.env` file in the `backend/` directory:
+   Edit `backend/.env`:
    ```bash
-   # Production AI Configuration
+   # Real AI Configuration
    OPENROUTER_API_KEY=your-actual-api-key-here
    USE_MOCK_LLM=false
    
@@ -209,6 +258,39 @@ By default, the system uses mock AI responses for development and testing. To en
    cd backend
    npm run dev
    ```
+
+### Mode Switching Examples
+
+#### Development Workflow:
+```bash
+# Start with mock for quick development
+echo "USE_MOCK_LLM=true" >> backend/.env
+npm run dev:backend
+
+# Switch to real LLM for testing
+sed -i 's/USE_MOCK_LLM=true/USE_MOCK_LLM=false/' backend/.env
+# Restart server to apply changes
+```
+
+#### Testing Different Scenarios:
+```bash
+# Test with mock responses
+USE_MOCK_LLM=true npm run test
+
+# Test with real LLM (requires API key)
+USE_MOCK_LLM=false npm run test
+```
+
+### Current Mode Verification
+
+Check your current LLM mode by looking at the server logs when starting:
+- **Mock Mode**: `"Using Mock LLM Service for chat completion"`
+- **Real Mode**: `"Attempting OpenRouter API call to model deepseek/..."`
+
+Or check your `.env` file:
+```bash
+grep USE_MOCK_LLM backend/.env
+```
 
 ### AI Features Available
 

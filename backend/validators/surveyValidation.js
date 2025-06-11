@@ -19,7 +19,12 @@ const surveyCreationSchema = Joi.object({
       'string.empty': 'Question cannot be an empty field',
       'any.required': 'Question is a required field'
     }),
-  guidelines: Joi.string().allow(''), // Optional, max length
+  guidelines: Joi.string().required()
+    .messages({
+      'string.base': 'Guidelines should be a type of text',
+      'string.empty': 'Guidelines cannot be an empty field',
+      'any.required': 'Guidelines are a required field'
+    }),
   permittedDomains: Joi.array().items(Joi.string().pattern(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))
     .optional()
     .messages({

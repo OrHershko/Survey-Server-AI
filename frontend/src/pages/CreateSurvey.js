@@ -91,6 +91,7 @@ const CreateSurvey = () => {
             label="Response Guidelines"
             value={formData.guidelines}
             onChange={handleChange}
+            required
             multiline
             rows={6}
             helperText="Provide clear instructions for participants on how to frame their responses."

@@ -15,4 +15,4 @@ mockLlmService.validateResponses.mockResolvedValue([
   { responseId: 'response2', isValid: false, reason: 'Mock validation failed.' },
 ]);
 
-module.exports = mockLlmService; 
+module.exports = mockLlmService;

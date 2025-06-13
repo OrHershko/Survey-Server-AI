@@ -1,7 +1,7 @@
 const UserService = require('../services/UserService');
 const { registrationSchema, loginSchema } = require('../validators/userValidation');
 const logger = require('../config/logger');
-const { generateAccessToken, generateRefreshToken } = require('../utils/jwtUtils');
+const { generateAccessToken, generateRefreshToken, verifyToken } = require('../utils/jwtUtils');
 
 /**
  * @desc    Register a new user
@@ -100,7 +100,10 @@ const loginUser = async (req, res, next) => {
 
     // 4. User is authenticated, generate JWT tokens
     const accessToken = generateAccessToken({ id: user._id, username: user.username });
-    const refreshToken = generateRefreshToken({ id: user._id }); // Refresh token might have a different payload or secret in a more complex setup
+    const refreshToken = generateRefreshToken({ id: user._id });
+
+    // Store refresh token in database
+    await user.addRefreshToken(refreshToken);
 
     logger.info(`User logged in successfully: ${user.email} (ID: ${user._id})`);
 
@@ -127,7 +130,89 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Refresh access token using refresh token
+ * @route   POST /api/auth/refresh
+ * @access  Public
+ */
+const refreshToken = async (req, res, next) => {
+  try {
+    const { refreshToken: token } = req.body;
+
+    if (!token) {
+      logger.warn('Refresh token request without token');
+      return res.status(401).json({ message: 'Refresh token required.' });
+    }
+
+    // Verify refresh token
+    const decoded = verifyToken(token);
+    if (!decoded || !decoded.id) {
+      logger.warn('Invalid refresh token provided');
+      return res.status(403).json({ message: 'Invalid refresh token.' });
+    }
+
+    // Find user and validate refresh token
+    const user = await UserService.findById(decoded.id);
+    if (!user || !user.isValidRefreshToken(token)) {
+      logger.warn(`Refresh token validation failed for user: ${decoded.id}`);
+      return res.status(403).json({ message: 'Invalid refresh token.' });
+    }
+
+    // Generate new access token
+    const newAccessToken = generateAccessToken({ id: user._id, username: user.username });
+
+    logger.info(`Access token refreshed for user: ${user.email} (ID: ${user._id})`);
+
+    res.status(200).json({
+      message: 'Token refreshed successfully.',
+      accessToken: newAccessToken,
+      expiresIn: process.env.JWT_EXPIRES_IN || '1h'
+    });
+
+  } catch (error) {
+    logger.error('Error in refreshToken controller:', error);
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    next(error);
+  }
+};
+
+/**
+ * @desc    Logout user and invalidate refresh token
+ * @route   POST /api/auth/logout
+ * @access  Public
+ */
+const logoutUser = async (req, res, next) => {
+  try {
+    const { refreshToken: token } = req.body;
+
+    if (!token) {
+      return res.status(200).json({ message: 'Logged out successfully.' });
+    }
+
+    // Verify and remove refresh token
+    const decoded = verifyToken(token);
+    if (decoded && decoded.id) {
+      const user = await UserService.findById(decoded.id);
+      if (user) {
+        await user.removeRefreshToken(token);
+        logger.info(`User logged out: ${user.email} (ID: ${user._id})`);
+      }
+    }
+
+    res.status(200).json({ message: 'Logged out successfully.' });
+
+  } catch (error) {
+    logger.error('Error in logoutUser controller:', error);
+    // Don't fail logout even if there's an error
+    res.status(200).json({ message: 'Logged out successfully.' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  refreshToken,
+  logoutUser,
 }; 

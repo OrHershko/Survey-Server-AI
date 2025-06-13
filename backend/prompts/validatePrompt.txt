@@ -12,10 +12,14 @@ Each response in the JSON array is a string. Please review each response and che
 
 For each response that violates one or more guidelines, identify the response (by its original index in the input array) and clearly state the reason for the violation, referencing the specific guideline(s) if possible.
 
-Format your response as a JSON array of objects. Each object should represent a problematic response and have "responseIndex" (integer) and "reason" (string) keys. For example:
+IMPORTANT: Format your response as a valid JSON array only. Do not include any markdown formatting, explanations, or text outside the JSON.
+
+Response format:
 [
   { "responseIndex": 0, "reason": "Violates guideline 3: Response is too short." },
   { "responseIndex": 2, "reason": "Contains inappropriate language, violating guideline 5." }
 ]
 
-If all responses are compliant, return an empty array []. 
+If all responses are compliant, return: []
+
+Return only the JSON array, nothing else. 

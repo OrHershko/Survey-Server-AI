@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, loginUser } = require('../controllers/authController');
+const { registerUser, loginUser, refreshToken, logoutUser } = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -12,5 +12,15 @@ router.post('/register', registerUser);
 // @desc    Authenticate user & get token
 // @access  Public
 router.post('/login', loginUser);
+
+// @route   POST /auth/refresh
+// @desc    Refresh access token using refresh token
+// @access  Public
+router.post('/refresh', refreshToken);
+
+// @route   POST /auth/logout
+// @desc    Logout user and invalidate refresh token
+// @access  Public
+router.post('/logout', logoutUser);
 
 module.exports = router; 

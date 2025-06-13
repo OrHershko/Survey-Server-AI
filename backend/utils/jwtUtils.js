@@ -34,7 +34,11 @@ const verifyToken = (token) => {
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {
     // Handle specific errors like TokenExpiredError, JsonWebTokenError if needed
-    logger.error('JWT Verification Error:', error.message);
+    logger.error('JWT Verification Error:', {
+      message: error.message,
+      name: error.name,
+      token: token ? `${token.substring(0, 20)}...` : 'null'
+    });
     return null;
   }
 };

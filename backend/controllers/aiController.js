@@ -4,60 +4,69 @@ const llmService = require('../services/llmService');
 const logger = require('../config/logger'); // Or your configured logger path
 
 // @desc    Generate a summary for a survey
-// @route   POST /api/surveys/:id/summarize
+// @route   POST /surveys/:id/summarize
 // @access  Private (Creator only)
-const generateSurveySummary = asyncHandler(async (req, res, next) => {
-    const surveyId = req.params.id;
-    const userId = req.user.id; // Assuming auth middleware adds user to req
+const generateSurveySummary = asyncHandler(async (req, res) => {
+  const surveyId = req.params.id;
+  const userId = req.user._id; // User object has _id field
 
-    const survey = await Survey.findById(surveyId);
+  const survey = await Survey.findById(surveyId);
 
-    if (!survey) {
-        //return next(new AppError('Survey not found', 404));
-        return res.status(404).json({ message: 'Survey not found' });
-    }
+  if (!survey) {
+    //return next(new AppError('Survey not found', 404));
+    return res.status(404).json({ message: 'Survey not found' });
+  }
 
-    // Authorization: Only creator can summarize
-    if (survey.creator.toString() !== userId) {
-        //return next(new AppError('User not authorized to summarize this survey', 403));
-        return res.status(403).json({ message: 'User not authorized to summarize this survey' });
-    }
+  // Authorization: Only creator can summarize
+  if (survey.creator.toString() !== userId.toString()) {
+    //return next(new AppError('User not authorized to summarize this survey', 403));
+    return res.status(403).json({ message: 'User not authorized to summarize this survey' });
+  }
 
-    // Compile responses - this might need more specific logic based on your Survey model
-    const responsesText = survey.responses.map(r => r.responseText).join('\n---\n'); // Example
-    if (!responsesText || responsesText.trim() === '') {
-        //return next(new AppError('No responses available to summarize', 400));
-        return res.status(400).json({ message: 'No responses available to summarize' });
-    }
+  // Compile responses - this might need more specific logic based on your Survey model
+  const responsesText = survey.responses.map(r => r.text).join('\n---\n');
+  if (!responsesText || responsesText.trim() === '') {
+    //return next(new AppError('No responses available to summarize', 400));
+    return res.status(400).json({ message: 'No responses available to summarize' });
+  }
 
-    try {
-        const summary = await llmService.generateSummary(
-            responsesText, 
-            survey.summaryInstructions || survey.guidelines,
-            survey.question,
-            survey.area
-        );
-        survey.summary = summary;
-        survey.summaryLastGenerated = Date.now();
-        await survey.save();
-        res.status(200).json({ 
-            success: true, 
-            message: 'Summary generated successfully', 
-            summary: survey.summary 
-        });
-    } catch (error) {
-        logger.error(`Error generating summary for survey ${surveyId}:`, error);
-        //return next(new AppError('Failed to generate summary due to an internal error', 500));
-        return res.status(500).json({ message: 'Failed to generate summary due to an internal error' });
-    }
+  try {
+    const summaryResult = await llmService.generateSummary(
+      responsesText, 
+      survey.summaryInstructions || survey.guidelines,
+      survey.question,
+      survey.area
+    );
+    
+    // Handle both string and object responses from LLM service
+    const summaryText = typeof summaryResult === 'string' 
+      ? summaryResult 
+      : summaryResult.summary || JSON.stringify(summaryResult);
+      
+    survey.summary = {
+      text: summaryText,
+      generatedAt: new Date(),
+      isVisible: false
+    };
+    await survey.save();
+    res.status(200).json({ 
+      success: true, 
+      message: 'Summary generated successfully', 
+      summary: survey.summary 
+    });
+  } catch (error) {
+    logger.error(`Error generating summary for survey ${surveyId}:`, error);
+    //return next(new AppError('Failed to generate summary due to an internal error', 500));
+    return res.status(500).json({ message: 'Failed to generate summary due to an internal error' });
+  }
 });
 
 // @desc    Toggle visibility of a survey's summary
-// @route   PATCH /api/surveys/:id/summary/visibility
+// @route   PATCH /surveys/:id/summary/visibility
 // @access  Private (Creator only)
-const toggleSummaryVisibility = asyncHandler(async (req, res, next) => {
+const toggleSummaryVisibility = asyncHandler(async (req, res) => {
     const surveyId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { isVisible } = req.body; // Expecting { isVisible: true/false }
 
     if (typeof isVisible !== 'boolean') {
@@ -72,7 +81,7 @@ const toggleSummaryVisibility = asyncHandler(async (req, res, next) => {
         return res.status(404).json({ message: 'Survey not found' });
     }
 
-    if (survey.creator.toString() !== userId) {
+    if (survey.creator.toString() !== userId.toString()) {
         //return next(new AppError('User not authorized to change summary visibility for this survey', 403));
         return res.status(403).json({ message: 'User not authorized to change summary visibility for this survey' });
     }
@@ -82,18 +91,18 @@ const toggleSummaryVisibility = asyncHandler(async (req, res, next) => {
         return res.status(400).json({ message: 'No summary available to toggle visibility. Generate a summary first.' });
     }
 
-    survey.summaryVisibleToRespondents = isVisible;
+    survey.summary.isVisible = isVisible;
     await survey.save();
 
     res.status(200).json({
         success: true,
         message: `Summary visibility updated to ${isVisible ? 'visible' : 'hidden'}`,
-        summaryVisibleToRespondents: survey.summaryVisibleToRespondents
+        survey: survey
     });
 });
 
 // @desc    Natural language search for surveys
-// @route   POST /api/surveys/search
+// @route   POST /surveys/search
 // @access  Public (or Private, depending on requirements)
 const searchSurveysNLP = asyncHandler(async (req, res, next) => {
     const { query } = req.body;
@@ -119,11 +128,11 @@ const searchSurveysNLP = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Validate responses for a survey against guidelines
-// @route   POST /api/surveys/:id/validate-responses
+// @route   POST /surveys/:id/validate-responses
 // @access  Private (Creator only)
 const validateSurveyResponses = asyncHandler(async (req, res, next) => {
     const surveyId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const survey = await Survey.findById(surveyId).populate('responses.user', 'username email');
 
@@ -132,7 +141,7 @@ const validateSurveyResponses = asyncHandler(async (req, res, next) => {
         return res.status(404).json({ message: 'Survey not found' });
     }
 
-    if (survey.creator.toString() !== userId) {
+    if (survey.creator.toString() !== userId.toString()) {
         //return next(new AppError('User not authorized to validate responses for this survey', 403));
         return res.status(403).json({ message: 'User not authorized to validate responses for this survey' });
     }
@@ -143,7 +152,7 @@ const validateSurveyResponses = asyncHandler(async (req, res, next) => {
     }
 
     // Extract response texts for validation
-    const responseTexts = survey.responses.map(r => r.responseText); // Assuming responseText field
+    const responseTexts = survey.responses.map(r => r.text);
 
     try {
         const validationResults = await llmService.validateResponses(responseTexts, survey.guidelines);

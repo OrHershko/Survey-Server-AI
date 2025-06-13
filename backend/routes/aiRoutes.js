@@ -23,7 +23,7 @@ const checkSurveyCreator = async (req, res, next) => {
 
 // POST /api/ai/surveys/:id/summarize - Generate Summary
 // Note: I am prefixing with /ai to group AI related routes. 
-// Alternatively, these could be part of /api/surveys routes.
+// Alternatively, these could be part of /surveys routes.
 router.post('/surveys/:id/summarize', protect, checkSurveyCreator, generateSurveySummary);
 
 // PATCH /api/ai/surveys/:id/summary/visibility - Toggle Summary Visibility

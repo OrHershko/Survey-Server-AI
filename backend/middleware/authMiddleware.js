@@ -12,11 +12,19 @@ const protect = async (req, res, next) => {
 
   if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
+    req.headers.authorization.toLowerCase().startsWith('bearer')
   ) {
     try {
       // Get token from header (e.g., "Bearer TOKEN_STRING")
-      token = req.headers.authorization.split(' ')[1];
+      // Handle multiple spaces and case insensitive Bearer
+      const parts = req.headers.authorization.split(' ').filter(part => part.length > 0);
+      token = parts[1];
+      
+      // If no token after Bearer, treat as no token
+      if (!token) {
+        logger.warn('No token provided for protected route');
+        return res.status(401).json({ message: 'Not authorized, no token' });
+      }
 
       // Verify token
       const decoded = verifyToken(token);
@@ -28,7 +36,10 @@ const protect = async (req, res, next) => {
 
       // Get user from the token payload (assuming payload has id)
       // Exclude passwordHash from the user object attached to the request
-      req.user = await User.findById(decoded.id).select('-passwordHash'); 
+      const userDoc = await User.findById(decoded.id).select('-passwordHash -__v');
+      
+      // Convert to plain object to properly exclude selected fields
+      req.user = userDoc ? userDoc.toObject() : null; 
 
       if (!req.user) {
         logger.warn(`User not found for token ID: ${decoded.id}`);

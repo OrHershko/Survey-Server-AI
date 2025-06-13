@@ -3,13 +3,8 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      // Mongoose 6 always behaves as if useCreateIndex is true and useFindAndModify is false
-      // So, no need to specify them explicitly
-      // For connection pooling, Mongoose handles this by default.
-      // Default poolSize is 5. You can configure it if needed:
-      // poolSize: 10, 
+      // Removed deprecated options: useNewUrlParser and useUnifiedTopology
+      // These are now defaults in newer versions of MongoDB driver
     });
     console.log('MongoDB Connected...');
 

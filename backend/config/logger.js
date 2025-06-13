@@ -56,8 +56,8 @@ if (process.env.NODE_ENV !== 'production') {
   //   format: winston.format.simple(),
   // }));
 } else {
-    // In production, ensure console logs are also structured if needed or remove for performance
-    // For now, the default console transport above will use consoleFormat
+  // In production, ensure console logs are also structured if needed or remove for performance
+  // For now, the default console transport above will use consoleFormat
 }
 
 // Create a stream object with a 'write' function that will be used by morgan

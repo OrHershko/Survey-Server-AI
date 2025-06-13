@@ -19,8 +19,8 @@ const createSurvey = async (req, res, next) => {
     // 2. Get creator ID from the authenticated user (attached by 'protect' middleware)
     const creatorId = req.user._id; // or req.user.id, depending on your auth middleware
     if (!creatorId) {
-        logger.error('Creator ID not found in request. Ensure auth middleware is working.');
-        return res.status(401).json({ message: 'Not authorized, user ID not found.'});
+      logger.error('Creator ID not found in request. Ensure auth middleware is working.');
+      return res.status(401).json({ message: 'Not authorized, user ID not found.'});
     }
 
     // 3. Call SurveyService to create the survey
@@ -34,7 +34,7 @@ const createSurvey = async (req, res, next) => {
   } catch (error) {
     logger.error('Error in createSurvey controller:', error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -92,10 +92,10 @@ const getSurveys = async (req, res, next) => {
 
     // Add responseCount to each survey
     const surveysWithResponseCount = surveys.map(survey => ({
-        ...survey.toObject(), // Convert Mongoose document to plain object
-        responseCount: survey.responses ? survey.responses.length : 0,
-        // responses: undefined // Optionally remove the full responses array if only count is needed for list view
-      }));
+      ...survey.toObject(), // Convert Mongoose document to plain object
+      responseCount: survey.responses ? survey.responses.length : 0,
+      // responses: undefined // Optionally remove the full responses array if only count is needed for list view
+    }));
 
     logger.info(`Retrieved ${surveysWithResponseCount.length} surveys for page ${page} with limit ${limit}`);
 
@@ -109,7 +109,7 @@ const getSurveys = async (req, res, next) => {
   } catch (error) {
     logger.error('Error in getSurveys controller:', error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -143,8 +143,8 @@ const getSurveyById = async (req, res, next) => {
 
     // Populate creator details and response user details
     const populateOptions = [
-        { path: 'creator', select: 'username email' },
-        { path: 'responses.user', select: 'username' } // Select username for users who responded
+      { path: 'creator', select: 'username email' },
+      { path: 'responses.user', select: 'username' } // Select username for users who responded
     ];
     
     const survey = await SurveyService.findById(surveyId, '', populateOptions);
@@ -154,7 +154,7 @@ const getSurveyById = async (req, res, next) => {
       return res.status(404).json({ message: 'Survey not found.' });
     }
 
-    let surveyData = survey.toObject(); // Convert to plain object to modify
+    const surveyData = survey.toObject(); // Convert to plain object to modify
 
     const isCreator = userId && survey.creator._id.toString() === userId.toString();
     logger.info(`Creator detection for survey ${surveyId}: userId=${userId}, creatorId=${survey.creator._id.toString()}, isCreator=${isCreator}`);
@@ -170,13 +170,13 @@ const getSurveyById = async (req, res, next) => {
 
     // By default, do not include responses array unless user is creator or survey responses are public (not implemented yet)
     if (!isCreator) {
-        // Check if the current user has responded to this survey
-        const userHasResponded = userId ? survey.responses.some(r => r.user.toString() === userId) : false;
-        surveyData.userHasResponded = userHasResponded;
+      // Check if the current user has responded to this survey
+      const userHasResponded = userId ? survey.responses.some(r => r.user.toString() === userId) : false;
+      surveyData.userHasResponded = userHasResponded;
         
-        // If not creator, don't send the full responses array by default.
-        // Individual responses might be viewable under different conditions later (e.g. if user submitted one)
-        delete surveyData.responses; 
+      // If not creator, don't send the full responses array by default.
+      // Individual responses might be viewable under different conditions later (e.g. if user submitted one)
+      delete surveyData.responses; 
     }
 
     // Respect summary visibility settings
@@ -197,7 +197,7 @@ const getSurveyById = async (req, res, next) => {
   } catch (error) {
     logger.error(`Error in getSurveyById controller (ID: ${req.params.id}):`, error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -237,9 +237,9 @@ const closeSurvey = async (req, res, next) => {
     // The updateById in BaseService should have { new: true } by default to return the updated doc
 
     if (!updatedSurvey) {
-        // This case should ideally not happen if findById succeeded, but as a safeguard:
-        logger.error(`Failed to update survey ${surveyId} to closed, though it was found.`);
-        return res.status(500).json({ message: 'Failed to close survey after finding it.'});
+      // This case should ideally not happen if findById succeeded, but as a safeguard:
+      logger.error(`Failed to update survey ${surveyId} to closed, though it was found.`);
+      return res.status(500).json({ message: 'Failed to close survey after finding it.'});
     }
 
     logger.info(`Survey ${surveyId} closed successfully by user ${userId}.`);
@@ -248,7 +248,7 @@ const closeSurvey = async (req, res, next) => {
   } catch (error) {
     logger.error(`Error in closeSurvey controller (ID: ${req.params.id}):`, error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -289,16 +289,16 @@ const updateSurveyExpiry = async (req, res, next) => {
     //    Depending on requirements, you might allow extending an already expired survey or not.
     //    For now, let's assume you can update expiry as long as it's not manually closed.
     if (survey.closed) {
-        logger.info(`Attempt to update expiry for an already closed survey: ${surveyId}`);
-        return res.status(400).json({ message: 'Cannot update expiry for a closed survey.'});
+      logger.info(`Attempt to update expiry for an already closed survey: ${surveyId}`);
+      return res.status(400).json({ message: 'Cannot update expiry for a closed survey.'});
     }
 
     // 5. Update survey expiry date
     const updatedSurvey = await SurveyService.updateById(surveyId, { expiryDate }, { new: true });
 
     if (!updatedSurvey) {
-        logger.error(`Failed to update expiry for survey ${surveyId}, though it was found.`);
-        return res.status(500).json({ message: 'Failed to update survey expiry after finding it.'});
+      logger.error(`Failed to update expiry for survey ${surveyId}, though it was found.`);
+      return res.status(500).json({ message: 'Failed to update survey expiry after finding it.'});
     }
 
     logger.info(`Survey ${surveyId} expiry updated successfully to ${expiryDate} by user ${userId}.`);
@@ -307,7 +307,7 @@ const updateSurveyExpiry = async (req, res, next) => {
   } catch (error) {
     logger.error(`Error in updateSurveyExpiry controller (ID: ${req.params.id}):`, error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -354,15 +354,15 @@ const submitResponse = async (req, res, next) => {
     const updatedSurvey = await SurveyService.addResponse(surveyId, responseData);
 
     if (!updatedSurvey) {
-        // This might happen if the survey was deleted between the findById and addResponse calls (unlikely but possible)
-        logger.error(`Failed to submit response to survey ${surveyId}, survey might have been deleted.`);
-        return res.status(404).json({ message: 'Could not submit response. Survey may no longer exist.' });
+      // This might happen if the survey was deleted between the findById and addResponse calls (unlikely but possible)
+      logger.error(`Failed to submit response to survey ${surveyId}, survey might have been deleted.`);
+      return res.status(404).json({ message: 'Could not submit response. Survey may no longer exist.' });
     }
 
     // Find the submitted/updated response to return it specifically
     // The service method `addResponse` already updates `updatedAt` for the specific response
     const submittedOrUpdatedResponse = updatedSurvey.responses.find(
-        res => res.user.toString() === userId.toString()
+      res => res.user.toString() === userId.toString()
     );
 
     logger.info(`Response submitted/updated successfully for survey ${surveyId} by user ${userId}.`);
@@ -376,7 +376,7 @@ const submitResponse = async (req, res, next) => {
   } catch (error) {
     logger.error(`Error in submitResponse controller (Survey ID: ${req.params.id}):`, error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -422,10 +422,10 @@ const updateResponse = async (req, res, next) => {
       return res.status(403).json({ message: 'Not authorized to update this response.' });
     }
     if (result === 'SURVEY_CLOSED') {
-        return res.status(400).json({ message: 'Survey is closed and responses cannot be updated.' });
+      return res.status(400).json({ message: 'Survey is closed and responses cannot be updated.' });
     }
     if (result === 'SURVEY_EXPIRED') {
-        return res.status(400).json({ message: 'Survey has expired and responses cannot be updated.' });
+      return res.status(400).json({ message: 'Survey has expired and responses cannot be updated.' });
     }
     
     // `result` is the updated response sub-document if successful
@@ -438,7 +438,7 @@ const updateResponse = async (req, res, next) => {
   } catch (error) {
     logger.error(`Error in updateResponse controller (Survey ID: ${req.params.id}, Response ID: ${req.params.responseId}):`, error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -490,7 +490,7 @@ const deleteResponse = async (req, res, next) => {
   } catch (error) {
     logger.error(`Error in deleteResponse controller (Survey ID: ${req.params.id}, Response ID: ${req.params.responseId}):`, error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -554,7 +554,7 @@ const getUserResponseForSurvey = async (req, res, next) => {
   } catch (error) {
     logger.error(`Error in getUserResponseForSurvey controller (Survey ID: ${req.params.id}, User ID: ${req.params.user_id}):`, error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }
@@ -621,7 +621,7 @@ const getAllUserResponses = async (req, res, next) => {
   } catch (error) {
     logger.error(`Error in getAllUserResponses controller (User ID: ${req.params.user_id}):`, error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }

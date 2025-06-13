@@ -28,14 +28,14 @@ const surveyCreationSchema = Joi.object({
   permittedDomains: Joi.array().items(Joi.string().pattern(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))
     .optional()
     .messages({
-        'string.pattern.base': 'Each permitted domain must be a valid domain name (e.g., example.com)'
+      'string.pattern.base': 'Each permitted domain must be a valid domain name (e.g., example.com)'
     }),
   permittedResponses: Joi.number().integer().min(1).optional(), // Optional, positive integer
   summaryInstructions: Joi.string().allow(''), // Optional, max length
   expiryDate: Joi.date().iso().greater('now').optional() // Optional, ISO date format, must be in the future
     .messages({
-        'date.greater': 'Expiry date must be in the future',
-        'date.format': 'Expiry date must be in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)'
+      'date.greater': 'Expiry date must be in the future',
+      'date.format': 'Expiry date must be in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)'
     })
 });
 
@@ -49,12 +49,12 @@ const surveyResponseSchema = Joi.object({
 });
 
 const surveyUpdateExpirySchema = Joi.object({
-    expiryDate: Joi.date().iso().greater('now').required()
-        .messages({
-            'date.greater': 'Expiry date must be in the future',
-            'date.format': 'Expiry date must be in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)',
-            'any.required': 'Expiry date is a required field'
-        })
+  expiryDate: Joi.date().iso().greater('now').required()
+    .messages({
+      'date.greater': 'Expiry date must be in the future',
+      'date.format': 'Expiry date must be in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)',
+      'any.required': 'Expiry date is a required field'
+    })
 });
 
 module.exports = {

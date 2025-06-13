@@ -44,8 +44,8 @@ const surveySchema = new mongoose.Schema(
     permittedDomains: [String],
     permittedResponses: Number, // Max number of responses per user
     summaryInstructions: {
-        type: String,
-        trim: true,
+      type: String,
+      trim: true,
     },
     creator: {
       type: mongoose.Schema.Types.ObjectId,

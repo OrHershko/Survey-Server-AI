@@ -61,7 +61,7 @@ const registerUser = async (req, res, next) => {
     // Pass error to the centralized error handler in server.js
     // Ensure the error has a statusCode if you want to set a specific one
     if (!error.statusCode) {
-        error.statusCode = 500; // Default to 500 if not set
+      error.statusCode = 500; // Default to 500 if not set
     }
     next(error);
   }
@@ -124,7 +124,7 @@ const loginUser = async (req, res, next) => {
   } catch (error) {
     logger.error('Error in loginUser controller:', error);
     if (!error.statusCode) {
-        error.statusCode = 500;
+      error.statusCode = 500;
     }
     next(error);
   }

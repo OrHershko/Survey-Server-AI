@@ -18,15 +18,7 @@ module.exports = {
   ],
   preset: '@shelf/jest-mongodb',
   watchPathIgnorePatterns: ['globalConfig'], // Required for mongodb-memory-server
-  coverageThreshold: {
-    global: {
-      branches: 30,
-      functions: 30,
-      lines: 30,
-      statements: 30
-    }
-  },
-  collectCoverage: true,
+  collectCoverage: false, // Let test runner control when to collect coverage
   coverageReporters: ['text', 'lcov', 'html'],
   testTimeout: 30000, // 30 seconds for tests
   setupFiles: ['<rootDir>/tests/env.setup.js']

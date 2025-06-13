@@ -2,64 +2,7 @@
 
 A full-stack application that allows users to create surveys, collect responses, and generate AI-powered summaries and insights.
 
-## Features
-
-- **Survey Management**: Create, manage, and close surveys with custom guidelines
-- **Response Collection**: Users can submit and edit responses to open surveys
-- **AI Summarization**: Generate intelligent summaries of survey responses using DeepSeek LLM
-- **Natural Language Search**: Find surveys using natural language queries
-- **Response Validation**: AI-powered validation of responses against survey guidelines
-- **User Authentication**: Secure registration and login with JWT tokens
-
-## Tech Stack
-
-### Backend
-- **Node.js** with **Express.js** framework
-- **MongoDB Atlas** with **Mongoose** ODM
-- **JWT** authentication with **bcrypt** password hashing
-- **Winston** for logging, **Morgan** for HTTP logging
-- **Joi** for input validation
-- **Jest** with **Supertest** for testing
-
-### Frontend
-- **React** with **JavaScript**
-- **React Router** for navigation
-- **Axios** for API communication
-- **React Testing Library** for testing
-
-### AI Integration
-- **DeepSeek LLM** via **OpenRouter** API
-- Custom prompt templates for search, summarization, and validation
-
-### Deployment
-- **Google Cloud Platform**
-- **MongoDB Atlas** (cloud database)
-
-## Project Structure
-
-```
-survey-server-ai/
-├── backend/                 # Express API server
-│   ├── controllers/         # Request handlers
-│   ├── services/           # Business logic
-│   ├── models/             # Database models
-│   ├── middleware/         # Auth, validation, logging
-│   ├── routes/             # API routes
-│   └── tests/              # Backend tests
-├── frontend/               # React application
-│   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── pages/          # Page components
-│   │   ├── services/       # API services
-│   │   └── hooks/          # Custom hooks
-├── prompts/                # LLM prompt templates
-│   ├── searchPrompt.txt
-│   ├── summaryPrompt.txt
-│   └── validatePrompt.txt
-└── docs/                   # Documentation
-```
-
-## Setup Instructions
+## Installation and Running the App
 
 ### Prerequisites
 - Node.js (v16 or higher)
@@ -94,19 +37,8 @@ survey-server-ai/
    # Edit frontend/.env with your actual values
    ```
 
-4. **Configure MongoDB Atlas**
-   - Create a MongoDB Atlas cluster
-   - Get your connection string
-   - Update `MONGODB_URI` in `backend/.env`
+### Running the Application
 
-5. **Configure OpenRouter API**
-   - Sign up for OpenRouter API
-   - Get your API key for DeepSeek
-   - Update `OPENROUTER_API_KEY` in `backend/.env`
-
-## Development
-
-### Start Development Servers
 ```bash
 # Start both backend and frontend
 npm run dev
@@ -116,59 +48,19 @@ npm run dev:backend    # Backend only (port 5000)
 npm run dev:frontend   # Frontend only (port 3000)
 ```
 
-### Testing
+## How to Run Tests
+
 ```bash
-# Run all tests
-npm test
-
-# Run backend tests only
-npm run test:backend
-
-# Run frontend tests only
-npm run test:frontend
+# Run all tests (backend)
+cd backend && npm test
 
 # Run tests with coverage
 cd backend && npm run test:coverage
 ```
 
-### Code Quality
-```bash
-# Lint code
-npm run lint
-
-# Format code
-npm run format
-```
-
-## API Documentation
-
-The API documentation will be available at `http://localhost:5000/api-docs` when the backend server is running (Swagger UI).
-
-### Main Endpoints
-
-- **Authentication**
-  - `POST /auth/register` - User registration
-  - `POST /auth/login` - User login
-
-- **Surveys**
-  - `GET /surveys` - List all surveys
-  - `POST /surveys` - Create new survey
-  - `GET /surveys/:id` - Get survey details
-  - `PATCH /surveys/:id/close` - Close survey
-
-- **Responses**
-  - `POST /surveys/:id/responses` - Submit response
-  - `PUT /surveys/:id/responses/:responseId` - Update response
-  - `DELETE /surveys/:id/responses/:responseId` - Delete response
-
-- **AI Features**
-  - `POST /surveys/:id/summarize` - Generate summary
-  - `POST /surveys/search` - Natural language search
-  - `POST /surveys/:id/validate-responses` - Validate responses
-
 ## Environment Variables
 
-### Backend Variables
+### Backend Variables (.env.example)
 - `PORT` - Server port (default: 5000)
 - `MONGODB_URI` - MongoDB connection string
 - `JWT_SECRET` - Secret for JWT token signing
@@ -176,47 +68,37 @@ The API documentation will be available at `http://localhost:5000/api-docs` when
 - `OPENROUTER_API_KEY` - OpenRouter API key for LLM
 - `USE_MOCK_LLM` - Use mock LLM for testing (true/false)
 
-### Frontend Variables
+### Frontend Variables (.env.example)
 - `REACT_APP_API_URL` - Backend API URL (default: http://localhost:5000)
 - `REACT_APP_ENV` - Environment (development/production)
 
-## AI Configuration
+## How to Verify Mocked/Test Mode
 
-### LLM Mode Switching
-
-The system supports two LLM modes that can be switched via environment configuration:
-
-#### Mock LLM Mode (Default for Development)
-- Returns static mock responses
-- No external API calls
-- Instant responses for development
-- No API key required
-- Ideal for development and testing
-
-#### Real LLM Mode (Production)
-- Calls OpenRouter API with DeepSeek model
-- Requires valid API key and internet connection
-- Real AI-powered responses
-- Consumes API credits
-
-### How to Switch Between Modes
-
-#### Option 1: Environment Variable (Recommended)
-
-**Switch to Mock Mode:**
+### Switch to Mock Mode
 ```bash
 # In backend/.env
 USE_MOCK_LLM=true
 ```
 
-**Switch to Real LLM Mode:**
+### Switch to Real LLM Mode
 ```bash
 # In backend/.env
 USE_MOCK_LLM=false
 OPENROUTER_API_KEY=your-actual-api-key-here
 ```
 
-#### Option 2: Quick Toggle Commands
+### Verify Current Mode
+
+**Option 1: Check server logs when starting:**
+- **Mock Mode**: `"Using Mock LLM Service for chat completion"`
+- **Real Mode**: `"Attempting OpenRouter API call to model deepseek/..."`
+
+**Option 2: Check .env file:**
+```bash
+grep USE_MOCK_LLM backend/.env
+```
+
+### Quick Toggle Commands
 
 **For Development/Testing (Mock Mode):**
 ```bash
@@ -231,115 +113,4 @@ cd backend
 echo "USE_MOCK_LLM=false" >> .env
 echo "OPENROUTER_API_KEY=your-api-key" >> .env
 npm run dev
-```
-
-### Setting Up Real AI Functionality
-
-1. **Get OpenRouter API Key**
-   - Sign up at [OpenRouter](https://openrouter.ai/)
-   - Get an API key that supports DeepSeek models
-   - Note: The system is configured to use `deepseek/deepseek-chat-v3-0324:free`
-
-2. **Configure Environment Variables**
-   Edit `backend/.env`:
-   ```bash
-   # Real AI Configuration
-   OPENROUTER_API_KEY=your-actual-api-key-here
-   USE_MOCK_LLM=false
-   
-   # Other required variables...
-   MONGODB_URI=your-mongodb-connection-string
-   JWT_SECRET=your-jwt-secret
-   REGISTRATION_SECRET=your-registration-code
-   ```
-
-3. **Restart the Server**
-   ```bash
-   cd backend
-   npm run dev
-   ```
-
-### Mode Switching Examples
-
-#### Development Workflow:
-```bash
-# Start with mock for quick development
-echo "USE_MOCK_LLM=true" >> backend/.env
-npm run dev:backend
-
-# Switch to real LLM for testing
-sed -i 's/USE_MOCK_LLM=true/USE_MOCK_LLM=false/' backend/.env
-# Restart server to apply changes
-```
-
-#### Testing Different Scenarios:
-```bash
-# Test with mock responses
-USE_MOCK_LLM=true npm run test
-
-# Test with real LLM (requires API key)
-USE_MOCK_LLM=false npm run test
-```
-
-### Current Mode Verification
-
-Check your current LLM mode by looking at the server logs when starting:
-- **Mock Mode**: `"Using Mock LLM Service for chat completion"`
-- **Real Mode**: `"Attempting OpenRouter API call to model deepseek/..."`
-
-Or check your `.env` file:
-```bash
-grep USE_MOCK_LLM backend/.env
-```
-
-### AI Features Available
-
-1. **Natural Language Search** (`POST /ai/surveys/search`)
-   - Search surveys using natural language queries
-   - Example: "Find surveys about programming languages"
-   - Returns matched surveys with explanations
-
-2. **Survey Summarization** (`POST /surveys/:id/summarize`)
-   - Generate AI summaries of survey responses
-   - Only available to survey creators
-   - Uses survey guidelines for context
-
-3. **Response Validation** (`POST /surveys/:id/validate-responses`)
-   - Validate responses against survey guidelines
-   - Identifies problematic responses
-   - Returns detailed violation reasons
-
-### Troubleshooting AI Issues
-
-- **JSON Parsing Errors**: The system automatically handles markdown code blocks in AI responses
-- **Rate Limiting**: OpenRouter may have rate limits; check your usage
-- **Model Availability**: Ensure the DeepSeek model is available in your OpenRouter plan
-- **API Key Issues**: Verify your OpenRouter API key is valid and has sufficient credits
-
-## Testing Strategy
-
-- **Unit Tests**: Individual functions and components
-- **Integration Tests**: API endpoints and database operations
-- **E2E Tests**: Complete user workflows
-- **Coverage Target**: 70% minimum
-
-### Mock Services
-- LLM calls are mocked during testing using static responses
-- MongoDB Memory Server for isolated database testing
-- No external API calls in test environment
-
-## Deployment
-
-Deployment instructions for Google Cloud Platform will be provided in the deployment phase.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make changes with proper tests
-4. Run linting and formatting
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License. 
+``` 

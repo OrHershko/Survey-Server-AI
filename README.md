@@ -20,6 +20,7 @@ A full-stack application that allows users to create surveys, collect responses,
 
 2. **Install dependencies**
    ```bash
+   # Install root dependencies and all workspace dependencies
    npm run install-all
    ```
 
@@ -40,30 +41,55 @@ A full-stack application that allows users to create surveys, collect responses,
 ### Running the Application
 
 ```bash
-# Start both backend and frontend
+# Start both backend and frontend simultaneously
 npm run dev
+```
 
-# Or start individually
-npm run dev:backend    # Backend only (port 5000)
-npm run dev:frontend   # Frontend only (port 3000)
+### Alternative Running Options
+
+```bash
+# Start backend only
+npm run start:backend
+
+# Start frontend only
+npm run start:frontend
+```
+
+## Available Scripts
+
+```bash
+# Development
+npm run dev                # Start both backend and frontend
+npm run start:backend      # Start backend only
+npm run start:frontend     # Start frontend only
+
+# Testing
+npm run test:backend       # Run backend tests
+npm run test:frontend      # Run frontend tests
+
+# Building
+npm run build:frontend     # Build frontend for production
 ```
 
 ## How to Run Tests
 
 ```bash
 # Run all tests (backend)
-cd backend && npm test
+npm run test:backend
 
-# Run tests with coverage
+# Run tests with coverage (from backend directory)
 cd backend && npm run test:coverage
 ```
 
 ## Environment Variables
 
 ### Backend Variables (.env.example)
+- `NODE_ENV` - Environment mode (test/development/production)
 - `PORT` - Server port (default: 5000)
 - `MONGODB_URI` - MongoDB connection string
 - `JWT_SECRET` - Secret for JWT token signing
+- `JWT_EXPIRES_IN` - JWT token expiration time (default: '1h')
+- `JWT_REFRESH_EXPIRES_IN` - JWT refresh token expiration time (default: '7d')
 - `REGISTRATION_SECRET` - Code required for user registration
 - `OPENROUTER_API_KEY` - OpenRouter API key for LLM
 - `USE_MOCK_LLM` - Use mock LLM for testing (true/false)

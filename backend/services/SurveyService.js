@@ -97,22 +97,45 @@ class SurveyService extends BaseService {
   async addResponse(surveyId, userIdOrResponseData, content = null) {
     let responseData;
     
-    if (typeof userIdOrResponseData === 'string' && content) {
-      // Called as addResponse(surveyId, userId, content)
+    if ((typeof userIdOrResponseData === 'string' || userIdOrResponseData.toString) && content !== null && content !== undefined) {
+      // Called as addResponse(surveyId, userId, content) - userId can be string or ObjectId
       responseData = {
         user: userIdOrResponseData,
         text: content
       };
-    } else {
-      // Called as addResponse(surveyId, responseData)
+    } else if (typeof userIdOrResponseData === 'object' && userIdOrResponseData.user && userIdOrResponseData.text) {
+      // Called as addResponse(surveyId, responseData) - responseData is an object with user and text properties
       responseData = userIdOrResponseData;
+    } else {
+      throw new Error('Invalid parameters: expected (surveyId, userId, text) or (surveyId, responseData)');
     }
+
+    // Validate responseData
+    if (!responseData || !responseData.user || !responseData.text) {
+      throw new Error('Response data must include user and text fields');
+    }
+
     try {
       logger.info(`Adding response to survey ${surveyId} by user ${responseData.user}`);
       const survey = await this.findById(surveyId);
       if (!survey) {
         logger.warn(`Survey not found with id: ${surveyId} when trying to add response.`);
         return null;
+      }
+
+      // Check if survey is closed
+      if (survey.closed) {
+        throw new Error('Cannot add response to a closed survey');
+      }
+
+      // Check if survey is expired
+      if (survey.expiryDate && new Date(survey.expiryDate) < new Date()) {
+        throw new Error('Cannot add response to an expired survey');
+      }
+
+      // Check maximum response limit (if set)
+      if (survey.permittedResponses && survey.responses.length >= survey.permittedResponses) {
+        throw new Error(`Survey has reached maximum response limit of ${survey.permittedResponses}`);
       }
 
       // Check if user has already responded (if only one response per user is allowed for this survey)
@@ -316,7 +339,18 @@ class SurveyService extends BaseService {
     if (result === 'UNAUTHORIZED') {
       throw new Error('User not authorized to update this response');
     }
-    return result;
+    if (result === 'SURVEY_CLOSED') {
+      throw new Error('Cannot update response on a closed survey');
+    }
+    if (result === 'SURVEY_EXPIRED') {
+      throw new Error('Cannot update response on an expired survey');
+    }
+    if (!result) {
+      throw new Error('Survey or response not found');
+    }
+    
+    // Return the updated survey
+    return this.findById(surveyId);
   }
 
   /**
@@ -327,7 +361,12 @@ class SurveyService extends BaseService {
     if (result === 'UNAUTHORIZED') {
       throw new Error('User not authorized to delete this response');
     }
-    return result;
+    if (!result) {
+      throw new Error('Survey or response not found');
+    }
+    
+    // Return the updated survey
+    return this.findById(surveyId);
   }
 
   /**
@@ -357,9 +396,9 @@ class SurveyService extends BaseService {
       const userResponse = survey.responses.find(response => response.user.toString() === userId.toString());
       if (userResponse) {
         userResponses.push({
+          ...userResponse.toObject(),
           survey: survey._id,
-          surveyTitle: survey.title,
-          response: userResponse
+          surveyTitle: survey.title
         });
       }
     });

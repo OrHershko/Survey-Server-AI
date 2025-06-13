@@ -1,5 +1,4 @@
 const SurveyService = require('../../services/SurveyService');
-const Survey = require('../../models/SurveyModel');
 const {
   createTestUser,
   createTestSurvey,
@@ -535,7 +534,7 @@ describe('SurveyService Unit Tests', () => {
       const protectedOperations = [
         () => SurveyService.updateSurvey(survey._id, nonCreator._id, { title: 'Hack' }),
         () => SurveyService.closeSurvey(survey._id, nonCreator._id),
-        () => SurveyService.updateSurveyExpiry(survey._id, nonCreator._id, new Date())
+        () => SurveyService.updateSurveyExpiry(survey._id, nonCreator._id, new Date(Date.now() + 24 * 60 * 60 * 1000))
       ];
 
       for (const operation of protectedOperations) {
@@ -610,7 +609,7 @@ describe('SurveyService Unit Tests', () => {
       
       // Responses should be in order of submission
       for (let i = 0; i < updatedSurvey.responses.length; i++) {
-        expect(updatedSurvey.responses[i].content).toBe(`Response ${i + 1}`);
+        expect(updatedSurvey.responses[i].text).toBe(`Response ${i + 1}`);
       }
     });
 

@@ -120,8 +120,13 @@ const generateSummary = async (textToSummarize, guidelines, surveyQuestion, surv
     throw new Error('Mock error during summary generation');
   }
   
-  // Return a string as expected by the AI controller
-  return 'Mock AI-generated summary of the survey responses. Key themes include positive feedback, areas for improvement, and suggestions.';
+  // Return structured object as expected by integration tests
+  return {
+    summary: 'Mock AI-generated summary of the survey responses.',
+    keyThemes: ['Positive feedback', 'Areas for improvement', 'Suggestions'],
+    sentiment: 'neutral',
+    confidence: 0.85
+  };
 };
 
 const searchSurveys = async (query, surveysContextArray) => {
@@ -138,19 +143,28 @@ const searchSurveys = async (query, surveysContextArray) => {
   }));
 };
 
-const validateResponses = async (responsesArray, guidelines) => {
+const validateResponses = async (responsesArray, _guidelines) => {
   await new Promise(resolve => setTimeout(resolve, 100));
   
-  return responsesArray.map((response, index) => ({
-    responseId: response.id || response._id || `mock-response-${index}`,
-    isValid: !response.content?.includes('invalid'),
-    feedback: response.content?.includes('invalid') 
-      ? 'Response contains inappropriate content' 
-      : 'Response is appropriate and follows guidelines',
-    suggestions: response.content?.includes('invalid') 
-      ? ['Please provide more constructive feedback', 'Consider rephrasing your response']
-      : []
-  }));
+  // Check if responsesArray contains objects or strings
+  const processedResponses = responsesArray.map((response, index) => {
+    // Handle both object format (with .content) and string format
+    const content = typeof response === 'string' ? response : response.content;
+    const id = typeof response === 'object' ? (response.id || response._id) : null;
+    
+    return {
+      responseId: id || `mock-response-${index}`,
+      isValid: !content?.includes('invalid'),
+      feedback: content?.includes('invalid') 
+        ? 'Response contains inappropriate content' 
+        : 'Response is appropriate and follows guidelines',
+      suggestions: content?.includes('invalid') 
+        ? ['Please provide more constructive feedback', 'Consider rephrasing your response']
+        : []
+    };
+  });
+  
+  return processedResponses;
 };
 
 // Override environment check for mock

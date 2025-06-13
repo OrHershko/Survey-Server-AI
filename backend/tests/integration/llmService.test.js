@@ -1,9 +1,5 @@
 const llmService = require('../../services/llmService');
-const {
-  createTestScenario,
-  generateResponseData,
-  cleanupTestData
-} = require('../utils/testHelpers');
+const { cleanupTestData } = require('../utils/testHelpers');
 
 // Mock the LLM service to use our test mock
 jest.mock('../../services/llmService', () => require('../mocks/llmService.mock'));
@@ -105,7 +101,7 @@ describe('LLM Service Integration Tests', () => {
         );
         expect.fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).toInclude('Mock error during summary generation');
+        expect(error.message).toContain('Mock error during summary generation');
       }
     });
   });
@@ -170,7 +166,7 @@ describe('LLM Service Integration Tests', () => {
         );
         expect.fail('Should have thrown an error');
       } catch (error) {
-        expect(error.message).toInclude('Mock error during survey search');
+        expect(error.message).toContain('Mock error during survey search');
       }
     });
   });
@@ -253,7 +249,7 @@ describe('LLM Service Integration Tests', () => {
       const result = validationResults[0];
       if (!result.isValid) {
         expect(result.suggestions.length).toBeGreaterThan(0);
-        expect(result.suggestions[0]).toInclude('Please provide more constructive feedback');
+        expect(result.suggestions[0]).toContain('Please provide more constructive feedback');
       }
     });
   });
@@ -381,8 +377,8 @@ describe('LLM Service Integration Tests', () => {
       expect(result.summary).toBeDefined();
       
       // Result should not contain the malicious content
-      expect(result.summary).not.toInclude('<script>');
-      expect(result.summary).not.toInclude('SELECT');
+      expect(result.summary).not.toContain('<script>');
+      expect(result.summary).not.toContain('SELECT');
     });
 
     it('should handle extremely long input', async () => {
@@ -441,8 +437,8 @@ describe('LLM Service Integration Tests', () => {
       
       // getPrompt should return mock prompt
       const prompt = llmService.getPrompt('testPrompt', { variable: 'value' });
-      expect(prompt).toInclude('testPrompt');
-      expect(prompt).toInclude('variable');
+      expect(prompt).toContain('testPrompt');
+      expect(prompt).toContain('variable');
     });
   });
 }); 

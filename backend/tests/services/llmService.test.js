@@ -1,6 +1,5 @@
 const llmService = require('../../services/llmService');
 const fs = require('fs').promises;
-const path = require('path');
 const axios = require('axios');
 
 // Mock dependencies
@@ -353,16 +352,16 @@ describe('LLM Service', () => {
       process.env.USE_MOCK_LLM = 'true';
       
       // Mock prompts
-      fs.readdir.mockResolvedValue(['summarizePrompt.txt', 'searchPrompt.txt', 'validatePrompt.txt']);
+      fs.readdir.mockResolvedValue(['summaryPrompt.txt', 'searchPrompt.txt', 'validatePrompt.txt']);
       fs.readFile.mockImplementation((filePath) => {
-        if (filePath.includes('summarizePrompt.txt')) {
-          return Promise.resolve('Summarize: {{text}}');
+        if (filePath.includes('summaryPrompt.txt')) {
+          return Promise.resolve('Generate a summary for {{responsesText}} with guidelines: {{guidelines}}. Question: {{surveyQuestion}}, Area: {{surveyArea}}');
         }
         if (filePath.includes('searchPrompt.txt')) {
-          return Promise.resolve('Search query: {{query}}');
+          return Promise.resolve('Search for {{query}} in context: {{surveysContext}}');
         }
         if (filePath.includes('validatePrompt.txt')) {
-          return Promise.resolve('Validate: {{responses}}');
+          return Promise.resolve('Validate responses {{responsesJsonArray}} with guidelines: {{guidelines}}');
         }
         return Promise.resolve('');
       });
@@ -374,13 +373,18 @@ describe('LLM Service', () => {
       it('should generate summary successfully', async () => {
         const result = await llmService.generateSummary('Test text to summarize', 'Test guidelines');
         
-        expect(typeof result).toBe('string');
-        expect(result.length).toBeGreaterThan(0);
+        expect(result).toBeDefined();
+        // Mock now returns JSON structure for summary requests
+        expect(result.summary).toBeDefined();
+        expect(result.keyThemes).toBeDefined();
+        expect(result.sentiment).toBeDefined();
+        expect(result.confidence).toBeDefined();
       });
 
       it('should handle empty text', async () => {
         const result = await llmService.generateSummary('', 'Guidelines');
-        expect(typeof result).toBe('string');
+        expect(result).toBeDefined();
+        expect(result.summary).toBeDefined();
       });
 
       it('should include all parameters in summary generation', async () => {
@@ -390,7 +394,8 @@ describe('LLM Service', () => {
           'Survey Question', 
           'Survey Area'
         );
-        expect(typeof result).toBe('string');
+        expect(result).toBeDefined();
+        expect(result.summary).toBeDefined();
       });
     });
 

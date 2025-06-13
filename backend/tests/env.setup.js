@@ -7,10 +7,8 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 // Also try loading .env.test if it exists (for test-specific overrides)
 dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
 
-// Set default test environment variables if not already set
-if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = 'test';
-}
+// Set default test environment variables (force test environment)
+process.env.NODE_ENV = 'test';
 
 if (!process.env.USE_MOCK_LLM) {
   process.env.USE_MOCK_LLM = 'true';

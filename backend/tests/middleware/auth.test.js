@@ -228,7 +228,7 @@ describe('Authentication Middleware Tests', () => {
       expect(req.user).not.toHaveProperty('__v');
       expect(req.user).toHaveProperty('_id');
       expect(req.user).toHaveProperty('email');
-      expect(req.user).toHaveProperty('name');
+      expect(req.user).toHaveProperty('username');
     });
 
     it('should handle concurrent authentication requests', async () => {

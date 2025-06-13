@@ -39,21 +39,30 @@ describe('UserService Unit Tests', () => {
     });
 
     it('should throw error for duplicate email', async () => {
-      const userData = generateUserData({
+      const userData1 = generateUserData({
         email: 'test@example.com',
+        username: 'testuser1',
+        password: 'Test123!@#'
+      });
+      
+      const userData2 = generateUserData({
+        email: 'test@example.com', // Same email
+        username: 'testuser2', // Different username
         password: 'Test123!@#'
       });
       
       // Convert password to passwordHash as expected by the service
-      userData.passwordHash = userData.password;
-      delete userData.password;
+      userData1.passwordHash = userData1.password;
+      delete userData1.password;
+      userData2.passwordHash = userData2.password;
+      delete userData2.password;
 
       // Create first user
-      await UserService.createUser(userData);
+      await UserService.createUser(userData1);
 
-      // Try to create user with same email
+      // Try to create user with same email but different username
       try {
-        await UserService.createUser(userData);
+        await UserService.createUser(userData2);
         fail('Should have thrown an error for duplicate email');
       } catch (error) {
         expect(error.message).toContain('email');
@@ -277,6 +286,11 @@ describe('UserService Unit Tests', () => {
         password: 'Valid123!'
       });
 
+      // Convert password to passwordHash as expected by the service
+      const originalPassword = userData.password;
+      userData.passwordHash = userData.password;
+      delete userData.password;
+
       const user = await UserService.createUser(userData);
 
       // Check that all required fields are present
@@ -288,7 +302,7 @@ describe('UserService Unit Tests', () => {
       expect(user).toHaveProperty('refreshTokens');
       
       // Check that passwordHash is properly hashed
-      expect(user.passwordHash).not.toBe(userData.password);
+      expect(user.passwordHash).not.toBe(originalPassword);
       
       // Check that email is lowercase
       expect(user.email).toBe(userData.email.toLowerCase());

@@ -142,6 +142,83 @@ class BaseService {
   }
   
   /**
+   * Finds a single document matching a query.
+   * @param {object} query - The Mongoose query object.
+   * @param {string} [select] - Optional fields to select.
+   * @param {object} [populateOptions] - Optional Mongoose populate options.
+   * @returns {Promise<object|null>} The found document or null if not found.
+   */
+  async findOne(query, select = '', populateOptions = null) {
+    try {
+      logger.debug(`Finding one ${this.modelName} with query:`, query);
+      let dbQuery = this.model.findOne(query);
+      if (select) {
+        dbQuery = dbQuery.select(select);
+      }
+      if (populateOptions) {
+        dbQuery = dbQuery.populate(populateOptions);
+      }
+      const document = await dbQuery.exec();
+      if (document) {
+        logger.debug(`Found ${this.modelName} matching query.`);
+      } else {
+        logger.debug(`No ${this.modelName} found matching query.`);
+      }
+      return document;
+    } catch (error) {
+      logger.error('Error in BaseService.findOne:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Updates a document by its ID (alias for updateById).
+   * @param {string} id - The ID of the document to update.
+   * @param {object} updateData - The data to update the document with.
+   * @param {object} [options] - Mongoose query options.
+   * @returns {Promise<object|null>} The updated document or null if not found.
+   */
+  async update(id, updateData, options = { new: true, runValidators: true }) {
+    try {
+      return await this.updateById(id, updateData, options);
+    } catch (error) {
+      logger.error('Error in BaseService.update:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes a document by its ID (alias for deleteById).
+   * @param {string} id - The ID of the document to delete.
+   * @returns {Promise<object|null>} The deleted document or null if not found.
+   */
+  async delete(id) {
+    try {
+      return await this.deleteById(id);
+    } catch (error) {
+      logger.error('Error in BaseService.delete:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes multiple documents matching a query.
+   * @param {object} query - The Mongoose query object.
+   * @returns {Promise<object>} The deletion result from MongoDB.
+   */
+  async deleteMany(query) {
+    try {
+      logger.info(`Deleting multiple ${this.modelName}s with query:`, query);
+      const result = await this.model.deleteMany(query);
+      logger.info(`Deleted ${result.deletedCount} ${this.modelName}(s) successfully.`);
+      return result;
+    } catch (error) {
+      logger.error('Error in BaseService.deleteMany:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Counts documents matching a query.
    * @param {object} query - The Mongoose query object.
    * @returns {Promise<number>} The count of matching documents.

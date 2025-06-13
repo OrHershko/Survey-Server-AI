@@ -24,7 +24,7 @@ const createSurvey = async (req, res, next) => {
     }
 
     // 3. Call SurveyService to create the survey
-    const survey = await SurveyService.createSurvey(value, creatorId);
+    const survey = await SurveyService.createSurvey(creatorId, value);
 
     logger.info(`Survey created successfully: ${survey.title} (ID: ${survey._id}) by user ${creatorId}`);
 

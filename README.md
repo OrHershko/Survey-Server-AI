@@ -2,6 +2,13 @@
 
 A full-stack application that allows users to create surveys, collect responses, and generate AI-powered summaries and insights.
 
+## Team Panda Info
+
+*   **Full Name:** Or Herhsko - 322316514
+*   **Full Name:** Tom Braudo - 324182914
+*   **Full Name:** Adva Levine - 319098133
+*   **Full Name:** Amir Azmon - 213475403
+
 ## Installation and Running the App
 
 ### Prerequisites
